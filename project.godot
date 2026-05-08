@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="TurretScript"
-run/main_scene="uid://d4e5f6g7h8jaj"
+run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -29,4 +29,3 @@ window/stretch/aspect="expand"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-run/main_scene="res://scenes/main.tscn"

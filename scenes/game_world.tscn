@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bd38h0c5fyy1c"]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/game_world.gd" id="1_gw"]
-[ext_resource type="PackedScene" uid="uid://f5l7mn4op6qr" path="res://scenes/entities/turret.tscn" id="2_turr"]
+[ext_resource type="PackedScene" path="res://scenes/entities/turret.tscn" id="2_turr"]
 
 [sub_resource type="Curve2D" id="Curve2D_gw"]
 _data = {

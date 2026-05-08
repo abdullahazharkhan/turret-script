@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://e4k6lm3no5pq"]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/projectile.gd" id="1_proj"]
-[ext_resource type="Texture2D" uid="uid://proj_basic" path="res://assets/sprites/projectiles/basic.png" id="2_psprite"]
+[ext_resource type="Texture2D" path="res://assets/sprites/projectiles/basic.png" id="2_psprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_proj"]
 radius = 8.0

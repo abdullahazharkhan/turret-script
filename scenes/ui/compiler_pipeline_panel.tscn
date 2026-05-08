@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://xcy3f2h0a7dd"]
+[gd_scene format=3]
 
 [node name="CompilerPipelinePanel" type="TabContainer"]
 anchors_preset = 15

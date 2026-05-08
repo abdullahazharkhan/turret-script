@@ -1,10 +1,13 @@
-[gd_scene load_steps=4 format=3 uid="uid://d4e5f6g7h8i9j"]
+[gd_scene load_steps=4 format=3]
 
-[ext_resource type="PackedScene" uid="uid://bd38h0c5fyy1c" path="res://scenes/game_world.tscn" id="1_kw4c5"]
-[ext_resource type="PackedScene" uid="uid://cw2s7b1j3w6xx" path="res://scenes/ui/ide_panel.tscn" id="2_djdhe"]
-[ext_resource type="PackedScene" uid="uid://xcy3f2h0a7dd" path="res://scenes/ui/compiler_pipeline_panel.tscn" id="3_oe9fd"]
+[ext_resource type="PackedScene" path="res://scenes/game_world.tscn" id="1_kw4c5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ide_panel.tscn" id="2_djdhe"]
+[ext_resource type="PackedScene" path="res://scenes/ui/compiler_pipeline_panel.tscn" id="3_oe9fd"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 
 [node name="Main" type="Node"]
+script = ExtResource("1_main")
 
 [node name="GameWorld" parent="." instance=ExtResource("1_kw4c5")]
 
