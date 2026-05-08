@@ -13,7 +13,7 @@ layout_mode = 2
 [node name="Parser_AST" type="Tree" parent="."]
 layout_mode = 2
 
-[node name="Semantic" type="Tree" parent="."]
+[node name="Symbol Table" type="Tree" parent="."]
 layout_mode = 2
 
 [node name="IR" type="ItemList" parent="."]

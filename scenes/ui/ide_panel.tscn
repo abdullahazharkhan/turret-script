@@ -38,14 +38,28 @@ icon = ExtResource("4_istep")
 layout_mode = 2
 text = "Reset"
 
-[node name="CodeEditor" type="TextEdit" parent="VBoxContainer"]
+[node name="CodeEditor" type="CodeEdit" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 text = "func main() {
-	// Write code here
+	var enemies = get_enemies();
+	var target = nearest(enemies);
+	if (distance(target) < 200) {
+		shoot(target);
+	}
 }"
+gutters_draw_line_numbers = true
+auto_brace_completion_enabled = true
+
+[node name="StatusBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="LineColLabel" type="Label" parent="VBoxContainer/StatusBar"]
+layout_mode = 2
+text = "Line: 1, Col: 1"
 
 [node name="DiagnosticsPanel" type="RichTextLabel" parent="VBoxContainer"]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
+bbcode_enabled = true
 text = "No errors."
