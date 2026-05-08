@@ -63,7 +63,7 @@ func _visit(node: AST.ASTNode):
 		"VarDecl":
 			if node.type_name == "var":
 				if not node.initializer:
-					_report_error("Type inference using 'var' requires an initializer.", node.span)
+					_report_error("Type inference using 'var' requires an initializer. (Did you mean to explicitly declare 'type name;' ?)", node.span)
 					node.type_name = TypeInfo.ERROR
 				else:
 					_visit(node.initializer)
@@ -72,19 +72,19 @@ func _visit(node: AST.ASTNode):
 				if node.initializer:
 					_visit(node.initializer)
 					if not TypeInfo.is_assignable(node.type_name, node.initializer.resolved_type):
-						_report_error("Cannot assign type '%s' to variable of type '%s'." % [node.initializer.resolved_type, node.type_name], node.span)
+						_report_error("Type mismatch: cannot assign '%s' to variable of type '%s'. (Check the variable declaration type)." % [node.initializer.resolved_type, node.type_name], node.span)
 			var sym = _define(node.identifier, node.type_name)
 			if sym == null:
-				_report_error("Variable '%s' is already declared in this scope." % node.identifier, node.span)
+				_report_error("Variable '%s' is already declared in this scope. (Consider renaming it)." % node.identifier, node.span)
 			node.symbol = sym
 		"Assignment":
 			var sym = _resolve(node.identifier)
 			if sym == null:
-				_report_error("Undefined variable '%s'." % node.identifier, node.span)
+				_report_error("Undefined variable '%s'. (Did you misspell it or forget to declare it?)" % node.identifier, node.span)
 			_visit(node.value)
 			if sym and node.value.resolved_type != TypeInfo.ERROR:
 				if not TypeInfo.is_assignable(sym.type_info, node.value.resolved_type):
-					_report_error("Cannot assign type '%s' to variable of type '%s'." % [node.value.resolved_type, sym.type_info], node.span)
+					_report_error("Type mismatch: cannot assign '%s' to variable of type '%s'." % [node.value.resolved_type, sym.type_info], node.span)
 		"FunctionDecl":
 			var param_types = []
 			for p in node.parameters:
@@ -113,7 +113,7 @@ func _visit(node: AST.ASTNode):
 		"IfStmt":
 			_visit(node.condition)
 			if node.condition.resolved_type != TypeInfo.BOOL and node.condition.resolved_type != TypeInfo.ERROR:
-				_report_error("Condition must be of type 'bool'.", node.condition.span)
+				_report_error("Condition must be of type 'bool'. (Did you use an assignment '=' instead of equality '==' ?)", node.condition.span)
 			_visit(node.then_branch)
 			if node.else_branch: _visit(node.else_branch)
 		"WhileStmt":
@@ -139,7 +139,7 @@ func _visit(node: AST.ASTNode):
 					_visit(node.value)
 					ret_type = node.value.resolved_type
 				if not TypeInfo.is_assignable(current_function.return_type, ret_type):
-					_report_error("Cannot return type '%s' from function returning '%s'." % [ret_type, current_function.return_type], node.span)
+					_report_error("Return type mismatch: cannot return '%s' from function returning '%s'." % [ret_type, current_function.return_type], node.span)
 		"ExprStmt":
 			_visit(node.expression)
 		"BinaryExpr":
@@ -171,7 +171,7 @@ func _visit(node: AST.ASTNode):
 					if lt == rt:
 						node.resolved_type = TypeInfo.BOOL
 					else:
-						_report_error("Cannot compare different types ('%s' and '%s')." % [lt, rt], node.span)
+						_report_error("Type mismatch: cannot compare different types ('%s' and '%s')." % [lt, rt], node.span)
 						node.resolved_type = TypeInfo.ERROR
 				TT.TK_AND, TT.TK_OR:
 					if lt == TypeInfo.BOOL and rt == TypeInfo.BOOL:
@@ -204,7 +204,7 @@ func _visit(node: AST.ASTNode):
 		"IdentifierExpr":
 			var sym = _resolve(node.identifier)
 			if sym == null:
-				_report_error("Undefined variable '%s'." % node.identifier, node.span)
+				_report_error("Undefined variable '%s'. (Did you misspell it or forget to declare it?)" % node.identifier, node.span)
 				node.resolved_type = TypeInfo.ERROR
 			else:
 				node.symbol = sym
@@ -212,7 +212,7 @@ func _visit(node: AST.ASTNode):
 		"CallExpr":
 			var sym = _resolve(node.callee)
 			if sym == null:
-				_report_error("Undefined function '%s'." % node.callee, node.span)
+				_report_error("Undefined function '%s'. (Check the spelling or the Built-in API reference)." % node.callee, node.span)
 				node.resolved_type = TypeInfo.ERROR
 				for arg in node.arguments: _visit(arg)
 				return
@@ -232,7 +232,7 @@ func _visit(node: AST.ASTNode):
 				_visit(arg)
 				if i < fn_type.parameters.size():
 					if not TypeInfo.is_assignable(fn_type.parameters[i], arg.resolved_type):
-						_report_error("Argument %d of '%s' expects type '%s' but got '%s'." % [i+1, node.callee, fn_type.parameters[i], arg.resolved_type], arg.span)
+						_report_error("Argument %d of '%s' expects type '%s' but got '%s'. (Check the API reference for the correct types)." % [i+1, node.callee, fn_type.parameters[i], arg.resolved_type], arg.span)
 						
 			node.resolved_type = fn_type.return_type
 		"MemberAccessExpr":
@@ -250,7 +250,7 @@ func _visit(node: AST.ASTNode):
 				elif node.member == "type":
 					node.resolved_type = TypeInfo.STRING
 				else:
-					_report_error("Property '%s' does not exist on type 'enemy'." % node.member, node.span)
+					_report_error("Property '%s' does not exist on type 'enemy'. Available properties: id, health, type, alive." % node.member, node.span)
 					node.resolved_type = TypeInfo.ERROR
 			else:
 				_report_error("Member access is only supported on 'enemy' objects.", node.span)

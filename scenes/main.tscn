@@ -36,3 +36,18 @@ size_flags_vertical = 3
 [node name="CompilerPipelinePanel" parent="CanvasLayer/HSplitContainer/UIVSplit" instance=ExtResource("3_oe9fd")]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
+
+[node name="IntroOverlay" type="AcceptDialog" parent="CanvasLayer"]
+title = "Welcome to TurretScript!"
+initial_position = 2
+size = Vector2i(550, 250)
+dialog_text = "Welcome to the TurretScript Compiler Demo!
+
+This project demonstrates a fully functional compiler pipeline and Virtual Machine written entirely in GDScript.
+
+1. Write your custom AI script in the IDE (or pick an Example).
+2. Click 'Compile' to see your code transform into Tokens, an AST, Symbol Table, and IR Bytecode.
+3. Click 'Run' to let the VM execute your bytecode and control the turret.
+
+Enjoy experimenting with the compiler!"
+dialog_autowrap = true

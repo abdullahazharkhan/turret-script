@@ -38,8 +38,8 @@ func _declaration() -> AST.ASTNode:
 
 func _function_declaration() -> AST.FunctionDecl:
 	var func_token = _previous()
-	var name = _consume(TT.TK_IDENTIFIER, "Expect function name.")
-	_consume(TT.TK_LPAREN, "Expect '(' after function name.")
+	var name = _consume(TT.TK_IDENTIFIER, "Expect function name. Did you forget the identifier after 'func'?")
+	_consume(TT.TK_LPAREN, "Expect '(' after function name. Example: func main() { }")
 	
 	var parameters = []
 	if not _check(TT.TK_RPAREN):
@@ -51,7 +51,7 @@ func _function_declaration() -> AST.FunctionDecl:
 			if not _match([TT.TK_COMMA]):
 				break
 				
-	_consume(TT.TK_RPAREN, "Expect ')' after parameters.")
+	_consume(TT.TK_RPAREN, "Expect ')' after parameters. Did you forget to close the parameter list?")
 	
 	var return_type = "void"
 	if _match([TT.TK_ARROW]):
@@ -78,7 +78,7 @@ func _var_declaration() -> AST.VarDecl:
 	if _match([TT.TK_ASSIGN]):
 		initializer = _expression()
 		
-	_consume(TT.TK_SEMICOLON, "Expect ';' after variable declaration.")
+	_consume(TT.TK_SEMICOLON, "Expect ';' after variable declaration. (Did you forget a semicolon?)")
 	
 	var node = AST.VarDecl.new(type_token.span)
 	node.type_name = type_token.lexeme
@@ -108,9 +108,9 @@ func _statement() -> AST.ASTNode:
 
 func _if_statement() -> AST.IfStmt:
 	var token = _previous()
-	_consume(TT.TK_LPAREN, "Expect '(' after 'if'.")
+	_consume(TT.TK_LPAREN, "Expect '(' after 'if'. Condition must be enclosed in parentheses.")
 	var condition = _expression()
-	_consume(TT.TK_RPAREN, "Expect ')' after if condition.")
+	_consume(TT.TK_RPAREN, "Expect ')' after 'if' condition.")
 	
 	var then_branch = _statement()
 	if then_branch is not AST.Block:
@@ -135,9 +135,9 @@ func _if_statement() -> AST.IfStmt:
 
 func _while_statement() -> AST.WhileStmt:
 	var token = _previous()
-	_consume(TT.TK_LPAREN, "Expect '(' after 'while'.")
+	_consume(TT.TK_LPAREN, "Expect '(' after 'while'. Condition must be enclosed in parentheses.")
 	var condition = _expression()
-	_consume(TT.TK_RPAREN, "Expect ')' after while condition.")
+	_consume(TT.TK_RPAREN, "Expect ')' after 'while' condition.")
 	
 	var body = _statement()
 	if body is not AST.Block:
@@ -175,7 +175,7 @@ func _return_statement() -> AST.ReturnStmt:
 	var value = null
 	if not _check(TT.TK_SEMICOLON):
 		value = _expression()
-	_consume(TT.TK_SEMICOLON, "Expect ';' after return value.")
+	_consume(TT.TK_SEMICOLON, "Expect ';' after return value. (Did you forget a semicolon?)")
 	
 	var node = AST.ReturnStmt.new(token.span)
 	node.value = value
@@ -195,7 +195,7 @@ func _assignment() -> AST.Assignment:
 func _expression_statement() -> AST.ExprStmt:
 	var expr = _expression()
 	var token = _previous()
-	_consume(TT.TK_SEMICOLON, "Expect ';' after expression.")
+	_consume(TT.TK_SEMICOLON, "Expect ';' after expression. (Did you forget a semicolon?)")
 	var node = AST.ExprStmt.new(expr.span if expr else token.span)
 	node.expression = expr
 	return node

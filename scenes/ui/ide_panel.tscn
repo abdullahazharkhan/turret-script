@@ -38,6 +38,24 @@ icon = ExtResource("4_istep")
 layout_mode = 2
 text = "Reset"
 
+[node name="VSeparator" type="VSeparator" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="ExamplesOption" type="OptionButton" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Save"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Load"
+
+[node name="HelpButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Help"
+
 [node name="CodeEditor" type="CodeEdit" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -63,3 +81,36 @@ custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 bbcode_enabled = true
 text = "No errors."
+
+[node name="HelpDialog" type="AcceptDialog" parent="."]
+title = "TurretScript Reference"
+initial_position = 2
+size = Vector2i(600, 400)
+
+[node name="HelpText" type="RichTextLabel" parent="HelpDialog"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -49.0
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "[b]Types:[/b] int, bool, string, enemy, void
+[b]Variables:[/b] var x = 5; int y = 10;
+[b]Control Flow:[/b] if (cond) { }, while (cond) { }, for enemy e in get_enemies() { }
+
+[b]Built-in API:[/b]
+- [color=#d2a8ff]get_enemies()[/color] -> array of enemies
+- [color=#d2a8ff]nearest(enemies_array)[/color] -> enemy
+- [color=#d2a8ff]distance(enemy)[/color] -> int
+- [color=#d2a8ff]shoot(enemy)[/color] -> void
+- [color=#d2a8ff]reload()[/color] -> void
+
+[b]Enemy Properties:[/b]
+- [color=#ffcc00]enemy.id[/color] (int)
+- [color=#ffcc00]enemy.health[/color] (int)
+- [color=#ffcc00]enemy.type[/color] (string: 'scout', 'tank', etc)
+- [color=#ffcc00]enemy.alive[/color] (bool)"

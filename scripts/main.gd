@@ -53,6 +53,11 @@ func _ready():
 		game_world.vm_log.connect(_on_vm_log)
 		game_world.vm_error.connect(_on_vm_error)
 
+	# Show intro
+	var intro = $CanvasLayer/IntroOverlay
+	if intro:
+		intro.popup_centered()
+
 # ─────────────────────────────────────────────
 #  Full compile (Compile button)
 # ─────────────────────────────────────────────
