@@ -4,16 +4,19 @@ extends RefCounted
 const LexerScript = preload("res://scripts/compiler/lexer.gd")
 const ParserScript = preload("res://scripts/compiler/parser.gd")
 const SemanticScript = preload("res://scripts/compiler/semantic_analyzer.gd")
+const IRBuilderScript = preload("res://scripts/compiler/ir/ir_builder.gd")
 const ResultScript = preload("res://scripts/compiler/data/compiler_result.gd")
 
 var lexer
 var parser
 var semantic_analyzer
+var ir_builder
 
 func _init():
 	lexer = LexerScript.new()
 	parser = ParserScript.new()
 	semantic_analyzer = SemanticScript.new()
+	ir_builder = IRBuilderScript.new()
 
 func compile(source: String):
 	var result = ResultScript.new()
@@ -21,14 +24,18 @@ func compile(source: String):
 	
 	var ast = null
 	var symbols = []
+	var ir_program = null
 	if lexer.diagnostics.is_empty():
 		ast = parser.parse(tokens)
 		if parser.diagnostics.is_empty():
 			symbols = semantic_analyzer.analyze(ast)
+			if semantic_analyzer.diagnostics.is_empty():
+				ir_program = ir_builder.build(ast)
 
 	result.tokens = tokens
 	result.ast = ast
 	result.symbols = symbols
+	result.ir = ir_program
 	result.diagnostics = lexer.diagnostics.duplicate()
 	if parser:
 		result.diagnostics.append_array(parser.diagnostics)

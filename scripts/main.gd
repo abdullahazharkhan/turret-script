@@ -39,6 +39,13 @@ func _update_pipeline_ui(result):
 	for sym in result.symbols:
 		var item = symbol_tree.create_item(root_sym)
 		item.set_text(0, sym.as_string())
+		
+	var ir_list = pipeline_panel.get_node("IR") as ItemList
+	ir_list.clear()
+	if result.ir != null:
+		for i in range(result.ir.instructions.size()):
+			var inst = result.ir.instructions[i]
+			ir_list.add_item("[%03d] %s" % [i, inst.as_string()])
 
 func _build_ast_tree(ast_node, tree_parent: TreeItem, tree: Tree):
 	if ast_node == null: return

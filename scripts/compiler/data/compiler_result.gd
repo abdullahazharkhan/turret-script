@@ -6,3 +6,4 @@ var tokens: Array = []
 var diagnostics: Array = []
 var ast
 var symbols: Array = []
+var ir
