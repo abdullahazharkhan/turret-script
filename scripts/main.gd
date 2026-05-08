@@ -3,21 +3,59 @@ extends Node
 const CompilerScript = preload("res://scripts/compiler/compiler.gd")
 const DiagScript = preload("res://scripts/compiler/data/diagnostic.gd")
 const TT = preload("res://scripts/compiler/data/token_type.gd")
+const TurretScriptVM = preload("res://scripts/runtime/turretscript_vm.gd")
 
 @onready var ide_panel = $CanvasLayer/HSplitContainer/UIVSplit/IDEPanel
 @onready var pipeline_panel = $CanvasLayer/HSplitContainer/UIVSplit/CompilerPipelinePanel
 @onready var game_world = $GameWorld
 
 var compiler
+var current_result
+var vm: TurretScriptVM
 
 func _ready():
 	compiler = CompilerScript.new()
 	ide_panel.compile_requested.connect(_on_compile_requested)
+	ide_panel.run_requested.connect(_on_run_requested)
+	ide_panel.step_requested.connect(_on_step_requested)
 
 func _on_compile_requested(source: String):
-	var result = compiler.compile(source)
-	ide_panel.show_diagnostics(result.diagnostics)
-	_update_pipeline_ui(result)
+	current_result = compiler.compile(source)
+	ide_panel.show_diagnostics(current_result.diagnostics)
+	_update_pipeline_ui(current_result)
+	
+func _on_run_requested():
+	if not current_result or not current_result.success:
+		_on_compile_requested(ide_panel.editor.text)
+		
+	if current_result and current_result.success and current_result.ir:
+		_start_vm()
+		vm.run()
+		
+func _on_step_requested():
+	if not vm or vm.context.state == 3 or vm.context.state == 4: # HALTED or ERROR
+		if not current_result or not current_result.success:
+			_on_compile_requested(ide_panel.editor.text)
+		if current_result and current_result.success and current_result.ir:
+			_start_vm()
+			
+	if vm and (vm.context.state == 0 or vm.context.state == 1): # READY or RUNNING
+		vm.step()
+
+func _start_vm():
+	vm = TurretScriptVM.new(current_result.ir)
+	vm.log_message.connect(_on_vm_log)
+	vm.runtime_error.connect(_on_vm_error)
+	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
+	if rt: rt.text = ""
+
+func _on_vm_log(msg: String):
+	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
+	if rt: rt.text += msg + "\n"
+
+func _on_vm_error(msg: String):
+	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
+	if rt: rt.text += "[color=red]" + msg + "[/color]\n"
 
 func _update_pipeline_ui(result):
 	var lexer_list = pipeline_panel.get_node("Lexer") as ItemList

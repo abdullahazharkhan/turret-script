@@ -1,6 +1,8 @@
 extends PanelContainer
 
 signal compile_requested(source_code)
+signal run_requested()
+signal step_requested()
 
 const DiagScript = preload("res://scripts/compiler/data/diagnostic.gd")
 
@@ -56,9 +58,11 @@ func _on_compile_pressed():
 
 func _on_run_pressed():
 	print("Run button pressed")
+	run_requested.emit()
 
 func _on_step_stage_pressed():
 	print("Step Stage button pressed")
+	step_requested.emit()
 
 func _on_reset_pressed():
 	print("Reset button pressed")
