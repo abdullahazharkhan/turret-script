@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4e5f6g7h8i9j"]
+
+[ext_resource type="PackedScene" uid="uid://bd38h0c5fyy1c" path="res://scenes/game_world.tscn" id="1_kw4c5"]
+[ext_resource type="PackedScene" uid="uid://cw2s7b1j3w6xx" path="res://scenes/ui/ide_panel.tscn" id="2_djdhe"]
+[ext_resource type="PackedScene" uid="uid://xcy3f2h0a7dd" path="res://scenes/ui/compiler_pipeline_panel.tscn" id="3_oe9fd"]
+
+[node name="Main" type="Node"]
+
+[node name="GameWorld" parent="." instance=ExtResource("1_kw4c5")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offset = 800
+
+[node name="LeftSpacer" type="Control" parent="CanvasLayer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="UIVSplit" type="VSplitContainer" parent="CanvasLayer/HSplitContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="IDEPanel" parent="CanvasLayer/HSplitContainer/UIVSplit" instance=ExtResource("2_djdhe")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CompilerPipelinePanel" parent="CanvasLayer/HSplitContainer/UIVSplit" instance=ExtResource("3_oe9fd")]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2

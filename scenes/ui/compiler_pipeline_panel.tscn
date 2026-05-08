@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://xcy3f2h0a7dd"]
+
+[node name="CompilerPipelinePanel" type="TabContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Lexer" type="ItemList" parent="."]
+layout_mode = 2
+
+[node name="Parser_AST" type="Tree" parent="."]
+layout_mode = 2
+
+[node name="Semantic" type="Tree" parent="."]
+layout_mode = 2
+
+[node name="IR" type="ItemList" parent="."]
+layout_mode = 2
+
+[node name="Runtime" type="RichTextLabel" parent="."]
+layout_mode = 2

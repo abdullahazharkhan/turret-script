@@ -1,0 +1,51 @@
+[gd_scene load_steps=5 format=3 uid="uid://cw2s7b1j3w6xx"]
+
+[ext_resource type="Script" path="res://scripts/ui/ide_panel.gd" id="1_a2b3c"]
+[ext_resource type="Texture2D" uid="uid://icon_compile" path="res://assets/ui/icons/icon_compile.png" id="2_icomp"]
+[ext_resource type="Texture2D" uid="uid://icon_run" path="res://assets/ui/icons/icon_run.png" id="3_irun"]
+[ext_resource type="Texture2D" uid="uid://icon_step" path="res://assets/ui/icons/icon_step.png" id="4_istep"]
+
+[node name="IDEPanel" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_a2b3c")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Toolbar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CompileButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Compile"
+icon = ExtResource("2_icomp")
+
+[node name="RunButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Run"
+icon = ExtResource("3_irun")
+
+[node name="StepStageButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Step Stage"
+icon = ExtResource("4_istep")
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Reset"
+
+[node name="CodeEditor" type="TextEdit" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "func main() {
+	// Write code here
+}"
+
+[node name="DiagnosticsPanel" type="RichTextLabel" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+text = "No errors."
