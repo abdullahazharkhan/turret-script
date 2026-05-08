@@ -47,15 +47,16 @@ func _start_vm():
 	vm.log_message.connect(_on_vm_log)
 	vm.runtime_error.connect(_on_vm_error)
 	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt: rt.text = ""
+	if rt:
+		rt.clear()
 
 func _on_vm_log(msg: String):
 	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt: rt.text += msg + "\n"
+	if rt: rt.append_text(msg + "\n")
 
 func _on_vm_error(msg: String):
 	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt: rt.text += "[color=red]" + msg + "[/color]\n"
+	if rt: rt.append_text("[color=red]" + msg + "[/color]\n")
 
 func _update_pipeline_ui(result):
 	var lexer_list = pipeline_panel.get_node("Lexer") as ItemList
