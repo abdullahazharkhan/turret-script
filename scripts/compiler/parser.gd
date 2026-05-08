@@ -27,7 +27,7 @@ func _declaration() -> AST.ASTNode:
 	
 	if _match([TT.TK_FUNC]):
 		result = _function_declaration()
-	elif _match([TT.TK_TYPE_INT, TT.TK_TYPE_BOOL, TT.TK_TYPE_STRING, TT.TK_TYPE_ENEMY, TT.TK_TYPE_VOID]):
+	elif _match([TT.TK_VAR, TT.TK_TYPE_INT, TT.TK_TYPE_BOOL, TT.TK_TYPE_STRING, TT.TK_TYPE_ENEMY, TT.TK_TYPE_VOID]):
 		result = _var_declaration()
 	else:
 		result = _statement()
@@ -152,7 +152,7 @@ func _while_statement() -> AST.WhileStmt:
 
 func _for_enemy_statement() -> AST.ForEnemyStmt:
 	var token = _previous()
-	_consume(TT.TK_ENEMY, "Expect 'enemy' after 'for'.")
+	_consume(TT.TK_TYPE_ENEMY, "Expect 'enemy' after 'for'.")
 	var name = _consume(TT.TK_IDENTIFIER, "Expect loop variable name.")
 	_consume(TT.TK_IN, "Expect 'in' after loop variable.")
 	_consume(TT.TK_GET_ENEMIES, "Expect 'get_enemies' after 'in'.")
@@ -305,10 +305,12 @@ func _call() -> AST.ASTNode:
 	while true:
 		if _match([TT.TK_LPAREN]):
 			expr = _finish_call(expr)
-		# Add MemberAccessExpr for future proofing, e.g. target.health
-		elif _match([TT.TK_ARROW]): # we used -> but typical member access is . we don't have . token
-			pass # Skip for now as it's not in base EBNF, wait, we don't have DOT token. EBNF says get_enemies()
-			break
+		elif _match([TT.TK_DOT]):
+			var name = _consume(TT.TK_IDENTIFIER, "Expect property name after '.'.")
+			var node = AST.MemberAccessExpr.new(_previous().span)
+			node.object = expr
+			if name: node.member = name.lexeme
+			expr = node
 		else:
 			break
 			

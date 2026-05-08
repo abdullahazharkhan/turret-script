@@ -22,9 +22,10 @@ func _init():
 		"if": TT.TK_IF, "else": TT.TK_ELSE,
 		"while": TT.TK_WHILE, "for": TT.TK_FOR,
 		"func": TT.TK_FUNC, "return": TT.TK_RETURN,
-		"enemy": TT.TK_ENEMY, "in": TT.TK_IN,
+		"enemy": TT.TK_TYPE_ENEMY, "in": TT.TK_IN,
 		"int": TT.TK_TYPE_INT, "bool": TT.TK_TYPE_BOOL,
 		"string": TT.TK_TYPE_STRING, "void": TT.TK_TYPE_VOID,
+		"var": TT.TK_VAR,
 		"get_enemies": TT.TK_GET_ENEMIES, "nearest": TT.TK_NEAREST,
 		"distance": TT.TK_DISTANCE, "shoot": TT.TK_SHOOT,
 		"reload": TT.TK_RELOAD
@@ -102,6 +103,8 @@ func _scan_token():
 			_add_token(TT.TK_COMMA)
 		";":
 			_add_token(TT.TK_SEMICOLON)
+		".":
+			_add_token(TT.TK_DOT)
 		"+":
 			_add_token(TT.TK_PLUS)
 		"-":

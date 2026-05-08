@@ -31,6 +31,14 @@ func _update_pipeline_ui(result):
 		var root = ast_tree.create_item()
 		root.set_text(0, "Program")
 		_build_ast_tree(result.ast, root, ast_tree)
+		
+	var symbol_tree = pipeline_panel.get_node("Symbol Table") as Tree
+	symbol_tree.clear()
+	var root_sym = symbol_tree.create_item()
+	root_sym.set_text(0, "Global Scope")
+	for sym in result.symbols:
+		var item = symbol_tree.create_item(root_sym)
+		item.set_text(0, sym.as_string())
 
 func _build_ast_tree(ast_node, tree_parent: TreeItem, tree: Tree):
 	if ast_node == null: return

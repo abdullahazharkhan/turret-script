@@ -3,6 +3,7 @@ extends RefCounted
 class ASTNode extends RefCounted:
 	var type: String = "ASTNode"
 	var span
+	var resolved_type = null
 
 class Program extends ASTNode:
 	var statements: Array = []
@@ -12,6 +13,7 @@ class VarDecl extends ASTNode:
 	var type_name: String
 	var identifier: String
 	var initializer: ASTNode
+	var symbol = null
 	func _init(s = null): type = "VarDecl"; span = s
 
 class Assignment extends ASTNode:
@@ -72,6 +74,7 @@ class LiteralExpr extends ASTNode:
 
 class IdentifierExpr extends ASTNode:
 	var identifier: String
+	var symbol = null
 	func _init(s = null): type = "IdentifierExpr"; span = s
 
 class CallExpr extends ASTNode:

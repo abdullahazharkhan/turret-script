@@ -5,3 +5,4 @@ var success: bool = false
 var tokens: Array = []
 var diagnostics: Array = []
 var ast
+var symbols: Array = []
