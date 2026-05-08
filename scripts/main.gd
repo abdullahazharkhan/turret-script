@@ -1,162 +1,218 @@
 extends Node
 
-const CompilerScript = preload("res://scripts/compiler/compiler.gd")
-const DiagScript = preload("res://scripts/compiler/data/diagnostic.gd")
-const TT = preload("res://scripts/compiler/data/token_type.gd")
-const TurretScriptVM = preload("res://scripts/runtime/turretscript_vm.gd")
+const CompilerScript   = preload("res://scripts/compiler/compiler.gd")
+const LexerScript      = preload("res://scripts/compiler/lexer.gd")
+const ParserScript     = preload("res://scripts/compiler/parser.gd")
+const SemanticScript   = preload("res://scripts/compiler/semantic_analyzer.gd")
+const IRBuilderScript  = preload("res://scripts/compiler/ir/ir_builder.gd")
+const TurretScriptVM   = preload("res://scripts/runtime/turretscript_vm.gd")
+const APIAdapter       = preload("res://scripts/runtime/turret_api_adapter.gd")
+const DiagScript       = preload("res://scripts/compiler/data/diagnostic.gd")
+const TT               = preload("res://scripts/compiler/data/token_type.gd")
 
-@onready var ide_panel = $CanvasLayer/HSplitContainer/UIVSplit/IDEPanel
+@onready var ide_panel      = $CanvasLayer/HSplitContainer/UIVSplit/IDEPanel
 @onready var pipeline_panel = $CanvasLayer/HSplitContainer/UIVSplit/CompilerPipelinePanel
-@onready var game_world = $GameWorld
+@onready var game_world     = $GameWorld
 
-var compiler
-var current_result
-var vm: TurretScriptVM
+# Pipeline stages
+const STAGE_NONE     = -1
+const STAGE_LEXER    = 0
+const STAGE_PARSER   = 1
+const STAGE_SEMANTIC = 2
+const STAGE_IR       = 3
+const STAGE_RUNTIME  = 4
+
+var _stage: int = STAGE_NONE
+
+# Individual pipeline components (for step mode)
+var _lexer
+var _parser
+var _semantic
+var _ir_builder
+
+# Intermediate results
+var _tokens: Array = []
+var _ast = null
+var _symbols: Array = []
+var _ir = null
+var _diagnostics: Array = []
+var _vm: TurretScriptVM = null
 
 func _ready():
-	compiler = CompilerScript.new()
+	_lexer     = LexerScript.new()
+	_parser    = ParserScript.new()
+	_semantic  = SemanticScript.new()
+	_ir_builder = IRBuilderScript.new()
+	
 	ide_panel.compile_requested.connect(_on_compile_requested)
 	ide_panel.run_requested.connect(_on_run_requested)
 	ide_panel.step_requested.connect(_on_step_requested)
+	ide_panel.reset_requested.connect(_on_reset_requested)
 
+# ─────────────────────────────────────────────
+#  Full compile (Compile button)
+# ─────────────────────────────────────────────
 func _on_compile_requested(source: String):
-	current_result = compiler.compile(source)
-	ide_panel.show_diagnostics(current_result.diagnostics)
-	_update_pipeline_ui(current_result)
+	_reset_pipeline()
+	pipeline_panel.reset_all()
 	
-func _on_run_requested():
-	if not current_result or not current_result.success:
-		_on_compile_requested(ide_panel.editor.text)
-		
-	if current_result and current_result.success and current_result.ir:
-		_start_vm()
-		vm.run()
-		
-func _on_step_requested():
-	if not vm or vm.context.state == 3 or vm.context.state == 4: # HALTED or ERROR
-		if not current_result or not current_result.success:
-			_on_compile_requested(ide_panel.editor.text)
-		if current_result and current_result.success and current_result.ir:
-			_start_vm()
-			
-	if vm and (vm.context.state == 0 or vm.context.state == 1): # READY or RUNNING
-		vm.step()
+	# ── Stage 1: Lexer ──
+	pipeline_panel.mark_stage_running(STAGE_LEXER)
+	_tokens = _lexer.tokenize(source)
+	_diagnostics = _lexer.diagnostics.duplicate()
+	pipeline_panel.show_lexer(_tokens, _diagnostics)
+	ide_panel.show_diagnostics(_diagnostics)
+	
+	if not _lexer.diagnostics.is_empty():
+		_stage = STAGE_LEXER
+		return
+	_stage = STAGE_LEXER
+	
+	# ── Stage 2: Parser ──
+	pipeline_panel.mark_stage_running(STAGE_PARSER)
+	_ast = _parser.parse(_tokens)
+	var parser_diags = _parser.diagnostics.duplicate()
+	_diagnostics.append_array(parser_diags)
+	pipeline_panel.show_ast(_ast, parser_diags)
+	ide_panel.show_diagnostics(_diagnostics)
+	
+	if not parser_diags.is_empty():
+		_stage = STAGE_PARSER
+		return
+	_stage = STAGE_PARSER
+	
+	# ── Stage 3: Semantic ──
+	pipeline_panel.mark_stage_running(STAGE_SEMANTIC)
+	_symbols = _semantic.analyze(_ast)
+	var sem_diags = _semantic.diagnostics.duplicate()
+	_diagnostics.append_array(sem_diags)
+	pipeline_panel.show_semantic(_symbols, _diagnostics)
+	ide_panel.show_diagnostics(_diagnostics)
+	
+	if not sem_diags.is_empty():
+		_stage = STAGE_SEMANTIC
+		return
+	_stage = STAGE_SEMANTIC
+	
+	# ── Stage 4: IR ──
+	pipeline_panel.mark_stage_running(STAGE_IR)
+	_ir = _ir_builder.build(_ast)
+	pipeline_panel.show_ir(_ir, [])
+	_stage = STAGE_IR
 
+# ─────────────────────────────────────────────
+#  Full run (Run button)
+# ─────────────────────────────────────────────
+func _on_run_requested():
+	# Compile first if needed
+	if _stage < STAGE_IR:
+		_on_compile_requested(ide_panel.editor.text)
+	if _stage < STAGE_IR or _ir == null:
+		return
+	
+	_start_vm()
+	_vm.run()
+	pipeline_panel.update_runtime_state(_vm)
+
+# ─────────────────────────────────────────────
+#  Step Stage (Step Stage button)
+# ─────────────────────────────────────────────
+func _on_step_requested():
+	var source = ide_panel.editor.text
+	
+	match _stage:
+		STAGE_NONE:
+			# Step 1: Lex
+			_reset_pipeline()
+			pipeline_panel.reset_all()
+			pipeline_panel.mark_stage_running(STAGE_LEXER)
+			_tokens = _lexer.tokenize(source)
+			_diagnostics = _lexer.diagnostics.duplicate()
+			pipeline_panel.show_lexer(_tokens, _diagnostics)
+			ide_panel.show_diagnostics(_diagnostics)
+			_stage = STAGE_LEXER
+		STAGE_LEXER:
+			if not _lexer.diagnostics.is_empty(): return
+			# Step 2: Parse
+			pipeline_panel.mark_stage_running(STAGE_PARSER)
+			_ast = _parser.parse(_tokens)
+			var pd = _parser.diagnostics.duplicate()
+			_diagnostics.append_array(pd)
+			pipeline_panel.show_ast(_ast, pd)
+			ide_panel.show_diagnostics(_diagnostics)
+			_stage = STAGE_PARSER
+		STAGE_PARSER:
+			if not _parser.diagnostics.is_empty(): return
+			# Step 3: Semantic
+			pipeline_panel.mark_stage_running(STAGE_SEMANTIC)
+			_symbols = _semantic.analyze(_ast)
+			var sd = _semantic.diagnostics.duplicate()
+			_diagnostics.append_array(sd)
+			pipeline_panel.show_semantic(_symbols, _diagnostics)
+			ide_panel.show_diagnostics(_diagnostics)
+			_stage = STAGE_SEMANTIC
+		STAGE_SEMANTIC:
+			if not _semantic.diagnostics.is_empty(): return
+			# Step 4: IR
+			pipeline_panel.mark_stage_running(STAGE_IR)
+			_ir = _ir_builder.build(_ast)
+			pipeline_panel.show_ir(_ir, [])
+			_stage = STAGE_IR
+		STAGE_IR:
+			# Step 5: VM — one instruction at a time
+			if _vm == null or _vm.context.state == 3 or _vm.context.state == 4:
+				_start_vm()
+			_vm.step()
+			pipeline_panel.update_runtime_state(_vm)
+			pipeline_panel.highlight_ir_instruction(_vm.context.ip)
+		STAGE_RUNTIME:
+			# Continue single-stepping
+			if _vm and _vm.context.state == 1:
+				_vm.step()
+				pipeline_panel.update_runtime_state(_vm)
+				pipeline_panel.highlight_ir_instruction(_vm.context.ip)
+
+# ─────────────────────────────────────────────
+#  Reset (Reset button)
+# ─────────────────────────────────────────────
+func _on_reset_requested():
+	_reset_pipeline()
+	pipeline_panel.reset_all()
+	ide_panel.show_diagnostics([])
+
+# ─────────────────────────────────────────────
+#  VM helpers
+# ─────────────────────────────────────────────
 func _start_vm():
-	vm = TurretScriptVM.new(current_result.ir)
-	vm.log_message.connect(_on_vm_log)
-	vm.runtime_error.connect(_on_vm_error)
-	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt:
-		rt.clear()
+	var adapter = APIAdapter.new(game_world if game_world and game_world.has_method("get_enemies") else null)
+	_vm = TurretScriptVM.new(_ir, adapter)
+	_vm.log_message.connect(_on_vm_log)
+	_vm.runtime_error.connect(_on_vm_error)
+	_vm.execution_finished.connect(_on_vm_finished)
+	pipeline_panel.show_runtime_start()
+	_stage = STAGE_RUNTIME
 
 func _on_vm_log(msg: String):
-	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt: rt.append_text(msg + "\n")
+	pipeline_panel.log_runtime(msg, false)
 
 func _on_vm_error(msg: String):
-	var rt = pipeline_panel.get_node("Runtime") as RichTextLabel
-	if rt: rt.append_text("[color=red]" + msg + "[/color]\n")
+	pipeline_panel.log_runtime(msg, true)
 
-func _update_pipeline_ui(result):
-	var lexer_list = pipeline_panel.get_node("Lexer") as ItemList
-	lexer_list.clear()
-	for token in result.tokens:
-		lexer_list.add_item(token.as_string())
-		
-	var ast_tree = pipeline_panel.get_node("Parser_AST") as Tree
-	ast_tree.clear()
-	if result.ast != null:
-		var root = ast_tree.create_item()
-		root.set_text(0, "Program")
-		_build_ast_tree(result.ast, root, ast_tree)
-		
-	var symbol_tree = pipeline_panel.get_node("Symbol Table") as Tree
-	symbol_tree.clear()
-	var root_sym = symbol_tree.create_item()
-	root_sym.set_text(0, "Global Scope")
-	for sym in result.symbols:
-		var item = symbol_tree.create_item(root_sym)
-		item.set_text(0, sym.as_string())
-		
-	var ir_list = pipeline_panel.get_node("IR") as ItemList
-	ir_list.clear()
-	if result.ir != null:
-		for i in range(result.ir.instructions.size()):
-			var inst = result.ir.instructions[i]
-			ir_list.add_item("[%03d] %s" % [i, inst.as_string()])
+func _on_vm_finished():
+	pipeline_panel.update_runtime_state(_vm)
 
-func _build_ast_tree(ast_node, tree_parent: TreeItem, tree: Tree):
-	if ast_node == null: return
-	
-	match ast_node.type:
-		"Program":
-			for stmt in ast_node.statements:
-				_build_ast_tree(stmt, tree_parent, tree)
-		"VarDecl":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "VarDecl: %s %s" % [ast_node.type_name, ast_node.identifier])
-			if ast_node.initializer:
-				_build_ast_tree(ast_node.initializer, item, tree)
-		"Assignment":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "Assignment: %s =" % ast_node.identifier)
-			if ast_node.value: _build_ast_tree(ast_node.value, item, tree)
-		"FunctionDecl":
-			var item = tree.create_item(tree_parent)
-			var params = ""
-			for p in ast_node.parameters:
-				params += "%s %s, " % [p.type, p.name]
-			item.set_text(0, "FuncDecl: %s(%s) -> %s" % [ast_node.identifier, params, ast_node.return_type])
-			if ast_node.body: _build_ast_tree(ast_node.body, item, tree)
-		"Block":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "Block")
-			for stmt in ast_node.statements: _build_ast_tree(stmt, item, tree)
-		"IfStmt":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "IfStmt")
-			var cond = tree.create_item(item); cond.set_text(0, "Condition"); _build_ast_tree(ast_node.condition, cond, tree)
-			var then_b = tree.create_item(item); then_b.set_text(0, "Then"); _build_ast_tree(ast_node.then_branch, then_b, tree)
-			if ast_node.else_branch:
-				var else_b = tree.create_item(item); else_b.set_text(0, "Else"); _build_ast_tree(ast_node.else_branch, else_b, tree)
-		"WhileStmt":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "WhileStmt")
-			var cond = tree.create_item(item); cond.set_text(0, "Condition"); _build_ast_tree(ast_node.condition, cond, tree)
-			var body = tree.create_item(item); body.set_text(0, "Body"); _build_ast_tree(ast_node.body, body, tree)
-		"ForEnemyStmt":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "ForEnemyStmt: %s" % ast_node.identifier)
-			if ast_node.body: _build_ast_tree(ast_node.body, item, tree)
-		"ReturnStmt":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "ReturnStmt")
-			if ast_node.value: _build_ast_tree(ast_node.value, item, tree)
-		"ExprStmt":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "ExprStmt")
-			if ast_node.expression: _build_ast_tree(ast_node.expression, item, tree)
-		"BinaryExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "BinaryExpr: %s" % TT.token_name(ast_node.operator))
-			if ast_node.left: _build_ast_tree(ast_node.left, item, tree)
-			if ast_node.right: _build_ast_tree(ast_node.right, item, tree)
-		"UnaryExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "UnaryExpr: %s" % TT.token_name(ast_node.operator))
-			if ast_node.right: _build_ast_tree(ast_node.right, item, tree)
-		"LiteralExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "Literal: %s" % str(ast_node.value))
-		"IdentifierExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "Identifier: %s" % ast_node.identifier)
-		"CallExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "Call: %s()" % ast_node.callee)
-			for arg in ast_node.arguments: _build_ast_tree(arg, item, tree)
-		"MemberAccessExpr":
-			var item = tree.create_item(tree_parent)
-			item.set_text(0, "MemberAccess: .%s" % ast_node.member)
-			if ast_node.object: _build_ast_tree(ast_node.object, item, tree)
+# ─────────────────────────────────────────────
+#  Internal reset
+# ─────────────────────────────────────────────
+func _reset_pipeline():
+	_stage = STAGE_NONE
+	_tokens = []
+	_ast = null
+	_symbols = []
+	_ir = null
+	_diagnostics = []
+	_vm = null
+	_lexer = LexerScript.new()
+	_parser = ParserScript.new()
+	_semantic = SemanticScript.new()
+	_ir_builder = IRBuilderScript.new()

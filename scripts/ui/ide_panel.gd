@@ -3,6 +3,7 @@ extends PanelContainer
 signal compile_requested(source_code)
 signal run_requested()
 signal step_requested()
+signal reset_requested()
 
 const DiagScript = preload("res://scripts/compiler/data/diagnostic.gd")
 
@@ -66,6 +67,7 @@ func _on_step_stage_pressed():
 
 func _on_reset_pressed():
 	print("Reset button pressed")
+	reset_requested.emit()
 
 func show_diagnostics(diagnostics_list: Array):
 	if diagnostics_list.is_empty():

@@ -1,24 +1,151 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
 
-[node name="CompilerPipelinePanel" type="TabContainer"]
+[ext_resource type="Script" path="res://scripts/ui/pipeline_panel.gd" id="1_ppl"]
+
+[node name="CompilerPipelinePanel" type="PanelContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_ppl")
 
-[node name="Lexer" type="ItemList" parent="."]
+[node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="Parser_AST" type="Tree" parent="."]
+[node name="StageBar" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 36)
+
+[node name="LexerChip" type="Button" parent="VBox/StageBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "① LEXER"
+focus_mode = 0
+
+[node name="ArrowA" type="Label" parent="VBox/StageBar"]
+layout_mode = 2
+text = " → "
+
+[node name="ParserChip" type="Button" parent="VBox/StageBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "② PARSER"
+focus_mode = 0
+
+[node name="ArrowB" type="Label" parent="VBox/StageBar"]
+layout_mode = 2
+text = " → "
+
+[node name="SemanticChip" type="Button" parent="VBox/StageBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "③ SEMANTIC"
+focus_mode = 0
+
+[node name="ArrowC" type="Label" parent="VBox/StageBar"]
+layout_mode = 2
+text = " → "
+
+[node name="IRChip" type="Button" parent="VBox/StageBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "④ IR"
+focus_mode = 0
+
+[node name="ArrowD" type="Label" parent="VBox/StageBar"]
+layout_mode = 2
+text = " → "
+
+[node name="RuntimeChip" type="Button" parent="VBox/StageBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "⑤ RUNTIME"
+focus_mode = 0
+
+[node name="Tabs" type="TabContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Lexer" type="VBoxContainer" parent="VBox/Tabs"]
 layout_mode = 2
 
-[node name="Symbol Table" type="Tree" parent="."]
+[node name="LexerHeader" type="Label" parent="VBox/Tabs/Lexer"]
+layout_mode = 2
+text = "Tokens"
+theme_override_font_sizes/font_size = 13
+
+[node name="TokenList" type="Tree" parent="VBox/Tabs/Lexer"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 4
+column_titles_visible = true
+
+[node name="Parser_AST" type="VBoxContainer" parent="VBox/Tabs"]
 layout_mode = 2
 
-[node name="IR" type="ItemList" parent="."]
+[node name="ASTHeader" type="Label" parent="VBox/Tabs/Parser_AST"]
+layout_mode = 2
+text = "Abstract Syntax Tree"
+theme_override_font_sizes/font_size = 13
+
+[node name="ASTTree" type="Tree" parent="VBox/Tabs/Parser_AST"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Semantic" type="VBoxContainer" parent="VBox/Tabs"]
 layout_mode = 2
 
-[node name="Runtime" type="RichTextLabel" parent="."]
+[node name="SemanticHeader" type="Label" parent="VBox/Tabs/Semantic"]
 layout_mode = 2
+text = "Symbol Table + Diagnostics"
+theme_override_font_sizes/font_size = 13
+
+[node name="SemanticSplit" type="VSplitContainer" parent="VBox/Tabs/Semantic"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SymbolTree" type="Tree" parent="VBox/Tabs/Semantic/SemanticSplit"]
+layout_mode = 2
+columns = 3
+column_titles_visible = true
+
+[node name="DiagList" type="ItemList" parent="VBox/Tabs/Semantic/SemanticSplit"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+
+[node name="IR" type="VBoxContainer" parent="VBox/Tabs"]
+layout_mode = 2
+
+[node name="IRHeader" type="Label" parent="VBox/Tabs/IR"]
+layout_mode = 2
+text = "IR Bytecode"
+theme_override_font_sizes/font_size = 13
+
+[node name="IRList" type="ItemList" parent="VBox/Tabs/IR"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Runtime" type="VBoxContainer" parent="VBox/Tabs"]
+layout_mode = 2
+
+[node name="RuntimeHeader" type="Label" parent="VBox/Tabs/Runtime"]
+layout_mode = 2
+text = "Runtime Execution"
+theme_override_font_sizes/font_size = 13
+
+[node name="RuntimeSplit" type="HSplitContainer" parent="VBox/Tabs/Runtime"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RuntimeState" type="Tree" parent="VBox/Tabs/Runtime/RuntimeSplit"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+columns = 2
+column_titles_visible = true
+
+[node name="APILog" type="RichTextLabel" parent="VBox/Tabs/Runtime/RuntimeSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
 bbcode_enabled = true
+scroll_following = true
