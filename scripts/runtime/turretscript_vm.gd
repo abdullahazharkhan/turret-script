@@ -162,6 +162,11 @@ func _execute_instruction(inst):
 				if obj.has(arg):
 					context.push(obj[arg])
 				else:
+					_error("Property '%s' not found on dictionary." % str(arg))
+			elif typeof(obj) == TYPE_OBJECT:
+				if arg in obj:
+					context.push(obj.get(arg))
+				else:
 					_error("Property '%s' not found on object." % str(arg))
 			else:
 				_error("Cannot access member '%s' on non-object." % str(arg))

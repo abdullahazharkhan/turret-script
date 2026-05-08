@@ -48,6 +48,10 @@ func _ready():
 	ide_panel.run_requested.connect(_on_run_requested)
 	ide_panel.step_requested.connect(_on_step_requested)
 	ide_panel.reset_requested.connect(_on_reset_requested)
+	
+	if game_world:
+		game_world.vm_log.connect(_on_vm_log)
+		game_world.vm_error.connect(_on_vm_error)
 
 # ─────────────────────────────────────────────
 #  Full compile (Compile button)
@@ -98,21 +102,28 @@ func _on_compile_requested(source: String):
 	pipeline_panel.mark_stage_running(STAGE_IR)
 	_ir = _ir_builder.build(_ast)
 	pipeline_panel.show_ir(_ir, [])
+	
+	if game_world and game_world.has_method("load_program"):
+		game_world.load_program(_ir)
+		
 	_stage = STAGE_IR
 
 # ─────────────────────────────────────────────
 #  Full run (Run button)
 # ─────────────────────────────────────────────
 func _on_run_requested():
-	# Compile first if needed
+	# If we're not fully compiled, try compiling
 	if _stage < STAGE_IR:
 		_on_compile_requested(ide_panel.editor.text)
-	if _stage < STAGE_IR or _ir == null:
-		return
-	
-	_start_vm()
-	_vm.run()
-	pipeline_panel.update_runtime_state(_vm)
+		
+	if _stage >= STAGE_IR and _ir != null:
+		if game_world and game_world.has_method("toggle_simulation"):
+			game_world.toggle_simulation()
+			if game_world.is_simulating:
+				pipeline_panel.show_runtime_start()
+				pipeline_panel.log_runtime("--- Simulation Started ---", false)
+			else:
+				pipeline_panel.log_runtime("--- Simulation Paused ---", false)
 
 # ─────────────────────────────────────────────
 #  Step Stage (Step Stage button)
@@ -158,19 +169,15 @@ func _on_step_requested():
 			_ir = _ir_builder.build(_ast)
 			pipeline_panel.show_ir(_ir, [])
 			_stage = STAGE_IR
-		STAGE_IR:
-			# Step 5: VM — one instruction at a time
-			if _vm == null or _vm.context.state == 3 or _vm.context.state == 4:
-				_start_vm()
-			_vm.step()
-			pipeline_panel.update_runtime_state(_vm)
-			pipeline_panel.highlight_ir_instruction(_vm.context.ip)
-		STAGE_RUNTIME:
-			# Continue single-stepping
-			if _vm and _vm.context.state == 1:
-				_vm.step()
-				pipeline_panel.update_runtime_state(_vm)
-				pipeline_panel.highlight_ir_instruction(_vm.context.ip)
+			
+			# We're intercepting Step in GameWorld now
+			if game_world and game_world.has_method("debug_step"):
+				game_world.debug_step(0.2)
+				if game_world.vm:
+					game_world._reset_vm()
+					game_world.vm.run()
+					pipeline_panel.update_runtime_state(game_world.vm)
+					pipeline_panel.highlight_ir_instruction(game_world.vm.context.ip)
 
 # ─────────────────────────────────────────────
 #  Reset (Reset button)
@@ -179,6 +186,8 @@ func _on_reset_requested():
 	_reset_pipeline()
 	pipeline_panel.reset_all()
 	ide_panel.show_diagnostics([])
+	if game_world and game_world.has_method("reset_wave"):
+		game_world.reset_wave()
 
 # ─────────────────────────────────────────────
 #  VM helpers

@@ -9,42 +9,36 @@ func _init(world = null):
 
 func get_enemies() -> Array:
 	emit_signal("log_message", "[API] get_enemies() called.")
-	if game_world and game_world.has_method("get_enemies"):
-		return game_world.get_enemies()
-	# Mock data for testing
-	return [
-		{"id": 1, "health": 100, "type": "scout", "distance": 150},
-		{"id": 2, "health": 200, "type": "tank", "distance": 50}
-	]
+	if game_world and game_world.has_method("api_get_enemies"):
+		return game_world.api_get_enemies()
+	return []
 
 func nearest(enemies: Array):
 	emit_signal("log_message", "[API] nearest() called with %d enemies." % enemies.size())
 	if enemies.is_empty(): return null
 	
-	var closest = enemies[0]
-	var min_dist = _get_distance(closest)
-	
-	for e in enemies:
-		var d = _get_distance(e)
-		if d < min_dist:
-			min_dist = d
-			closest = e
-	return closest
+	if game_world and game_world.has_method("api_nearest"):
+		return game_world.api_nearest(enemies)
+		
+	return null
 
 func distance(enemy) -> int:
-	var d = _get_distance(enemy)
-	emit_signal("log_message", "[API] distance() returned %d." % d)
-	return d
+	if game_world and game_world.has_method("api_distance"):
+		var d = int(game_world.api_distance(enemy))
+		emit_signal("log_message", "[API] distance() returned %d." % d)
+		return d
+	return 9999
 
 func shoot(enemy):
-	emit_signal("log_message", "[API] -> SHOOTING enemy ID: %s" % str(enemy.get("id", "?") if typeof(enemy) == TYPE_DICTIONARY else "?"))
-	if game_world and game_world.has_method("shoot"):
-		game_world.shoot(enemy)
+	var eid = enemy.id if (typeof(enemy) == TYPE_OBJECT and "id" in enemy) else "?"
+	emit_signal("log_message", "[API] -> SHOOTING enemy ID: %s" % str(eid))
+	if game_world and game_world.has_method("api_shoot"):
+		game_world.api_shoot(enemy)
 
 func reload():
 	emit_signal("log_message", "[API] -> RELOADING turret.")
-	if game_world and game_world.has_method("reload"):
-		game_world.reload()
+	if game_world and game_world.has_method("api_reload"):
+		game_world.api_reload()
 
 func _get_distance(enemy) -> int:
 	if typeof(enemy) == TYPE_DICTIONARY and enemy.has("distance"):
