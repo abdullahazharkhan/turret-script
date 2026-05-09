@@ -25,7 +25,7 @@ func _init():
 		"enemy": TT.TK_TYPE_ENEMY, "in": TT.TK_IN,
 		"int": TT.TK_TYPE_INT, "bool": TT.TK_TYPE_BOOL,
 		"string": TT.TK_TYPE_STRING, "void": TT.TK_TYPE_VOID,
-		"var": TT.TK_VAR,
+		"var": TT.TK_VAR, "null": TT.TK_NULL_LITERAL,
 		"get_enemies": TT.TK_GET_ENEMIES, "nearest": TT.TK_NEAREST,
 		"distance": TT.TK_DISTANCE, "shoot": TT.TK_SHOOT,
 		"reload": TT.TK_RELOAD

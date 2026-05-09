@@ -18,6 +18,9 @@ func set_target(target: Node2D):
 		barrel.look_at(target.global_position)
 
 func shoot(target: Node2D):
+	if ammo <= 0:
+		api_reload()
+
 	if ammo > 0 and time_since_last_shot >= cooldown:
 		ammo -= 1
 		time_since_last_shot = 0.0
@@ -29,6 +32,6 @@ func shoot(target: Node2D):
 		get_tree().current_scene.add_child(proj)
 		print("Turret shot at enemy! Ammo left: ", ammo)
 
-func reload():
+func api_reload():
 	ammo = max_ammo
 	print("Turret reloaded!")

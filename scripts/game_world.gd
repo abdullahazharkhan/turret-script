@@ -24,6 +24,7 @@ var ai_tick_timer: float = 0.0
 const AI_TICK_RATE = 0.2
 
 var last_targeted_enemy: Node2D = null
+var reached_enemy_count: int = 0
 
 func load_program(ir):
 	active_ir_program = ir
@@ -47,8 +48,10 @@ func reset_wave():
 	for c in enemy_path.get_children():
 		c.queue_free()
 	enemy_id_counter = 0
-	turret.ammo = turret.max_ammo
-	turret.time_since_last_shot = turret.cooldown
+	reached_enemy_count = 0
+	if is_instance_valid(turret):
+		turret.ammo = turret.max_ammo
+		turret.time_since_last_shot = turret.cooldown
 	last_targeted_enemy = null
 	_reset_vm()
 	queue_redraw()
@@ -74,15 +77,19 @@ func _process(delta):
 	queue_redraw()
 
 func _draw():
-	if is_instance_valid(last_targeted_enemy) and last_targeted_enemy.alive:
+	if is_instance_valid(last_targeted_enemy) and last_targeted_enemy.alive and is_instance_valid(turret):
 		draw_line(turret.global_position, last_targeted_enemy.global_position, Color(1, 0, 0, 0.5), 2.0)
 		draw_circle(last_targeted_enemy.global_position, 20.0, Color(1, 0, 0, 0.3))
 
 func _update_hud():
 	if not debug_label: return
 	var text = "--- TURRET HUD ---\n"
-	text += "Ammo: %d / %d\n" % [turret.ammo, turret.max_ammo]
-	text += "Cooldown: %.1fs\n" % max(0.0, turret.cooldown - turret.time_since_last_shot)
+	if is_instance_valid(turret):
+		text += "Ammo: %d / %d\n" % [turret.ammo, turret.max_ammo]
+		text += "Cooldown: %.1fs\n" % max(0.0, turret.cooldown - turret.time_since_last_shot)
+	else:
+		text += "Tower: DESTROYED - GAME OVER\n"
+	text += "Reached Enemies: %d\n" % reached_enemy_count
 	text += "Simulation: %s (x%.1f)\n" % [("RUNNING" if is_simulating else "PAUSED"), Engine.time_scale]
 	if vm:
 		text += "VM State: %d  IP: %d" % [vm.context.state, vm.context.ip]
@@ -109,16 +116,21 @@ func _spawn_enemy():
 
 func api_get_enemies() -> Array:
 	var enemies = []
+
 	for child in enemy_path.get_children():
 		if child is PathFollow2D and child.get_child_count() > 0:
 			var e = child.get_child(0)
-			if e is Enemy and e.alive:
+
+			if e.has_method("take_damage") and e.get("alive") == true:
 				enemies.append(e)
+
 	return enemies
 
 func api_nearest(enemies: Array) -> Node2D:
 	var nearest = null
 	var min_dist = INF
+	if not is_instance_valid(turret):
+		return null
 	var t_pos = turret.global_position
 	for e in enemies:
 		if is_instance_valid(e) and e.alive:
@@ -129,17 +141,26 @@ func api_nearest(enemies: Array) -> Node2D:
 	return nearest
 
 func api_distance(enemy: Node2D) -> float:
-	if is_instance_valid(enemy):
+	if is_instance_valid(turret) and is_instance_valid(enemy):
 		return turret.global_position.distance_to(enemy.global_position)
 	return INF
 
 func api_shoot(enemy: Node2D):
-	if is_instance_valid(enemy) and enemy.alive:
+	if is_instance_valid(turret) and is_instance_valid(enemy) and enemy.alive:
 		last_targeted_enemy = enemy
 		turret.shoot(enemy)
 
 func api_reload():
-	turret.reload()
+	if is_instance_valid(turret):
+		turret.api_reload()
+
+func on_enemy_reached_tower():
+	reached_enemy_count += 1
+	if reached_enemy_count >= 10:
+		if is_instance_valid(turret):
+			turret.queue_free()
+			is_simulating = false
+			print("Tower destroyed! Game Over.")
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -155,4 +176,3 @@ func _input(event):
 				api_shoot(n)
 		elif event.keycode == KEY_R:
 			api_reload()
-

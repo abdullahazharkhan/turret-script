@@ -25,8 +25,8 @@ const SAVE_PATH = "user://turret_script_save.txt"
 
 var EXAMPLES = [
 	{ "name": "1. Nearest Enemy (Default)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\tif (distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
-	{ "name": "2. Low-Health Priority", "code": "func main() {\n\tvar enemies = get_enemies();\n\tif (_array_size(enemies) == 0) { return; }\n\n\tvar best = _array_get(enemies, 0);\n\tfor enemy e in enemies {\n\t\tif (e.health < best.health) {\n\t\t\tbest = e;\n\t\t}\n\t}\n\n\tif (distance(best) < 200) {\n\t\tshoot(best);\n\t}\n}" },
-	{ "name": "3. Armor-Piercing (Tank Focus)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tfor enemy e in enemies {\n\t\tif (e.type == \"tank\" and distance(e) < 200) {\n\t\t\tshoot(e);\n\t\t\treturn;\n\t\t}\n\t}\n\n\t// Fallback to nearest\n\tvar target = nearest(enemies);\n\tif (distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
+	{ "name": "2. Low-Health Priority", "code": "func main() {\n\tvar enemies = get_enemies();\n\tif (_array_size(enemies) == 0) { return; }\n\n\tvar best = _array_get(enemies, 0);\n\tfor enemy e in get_enemies() {\n\t\tif (e.health < best.health) {\n\t\t\tbest = e;\n\t\t}\n\t}\n\n\tif (distance(best) < 200) {\n\t\tshoot(best);\n\t}\n}" },
+	{ "name": "3. Armor-Piercing (Tank Focus)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tfor enemy e in enemies {\n\t\tif (e.type == \"tank\" and distance(e) < 200) {\n\t\t\tshoot(e);\n\t\t\treturn;\n\t\t}\n\t}\n\n\t// Fallback to nearest\n\tvar target = nearest(enemies);\n\tif (target != null && distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
 	{ "name": "4. Reload Management", "code": "// Assumes ammo tracking via properties if added, or just periodic reload\nfunc main() {\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\t\n\tif (distance(target) > 250) {\n\t\treload(); // Reload while waiting\n\t} else {\n\t\tshoot(target);\n\t}\n}" },
 	{ "name": "5. Type Error (Intentionally Invalid)", "code": "func main() {\n\tint threshold = \"not a number\"; // Type mismatch error!\n\tvar enemies = get_enemies();\n\t\n\tif (distance(enemies) < threshold) { // 'distance' expects single enemy\n\t\tshoot(enemies);\n\t}\n}" }
 ]
@@ -122,3 +122,4 @@ func show_diagnostics(diagnostics_list: Array):
 		for d in diagnostics_list:
 			var color = "red" if d.level == DiagScript.LVL_ERROR else "orange"
 			diagnostics.text += "[color=%s]%s[/color]\n" % [color, d.as_string()]
+

@@ -212,7 +212,7 @@ func _visit(node: AST.ASTNode):
 			for arg in node.arguments:
 				_visit(arg)
 			
-			var builtins = ["get_enemies", "nearest", "distance", "shoot", "reload"]
+			var builtins = ["get_enemies", "nearest", "distance", "shoot", "reload", "_array_size", "_array_get"]
 			if node.callee in builtins:
 				_emit(IRInstruction.OpCode.BUILTIN_CALL, [node.callee, node.arguments.size()], ln)
 			else:

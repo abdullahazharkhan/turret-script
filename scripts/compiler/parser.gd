@@ -350,6 +350,13 @@ func _primary() -> AST.ASTNode:
 		n.value = token.literal
 		n.literal_type = token.type
 		return n
+	
+	if _match([TT.TK_NULL_LITERAL]):
+		var token = _previous()
+		var n = AST.LiteralExpr.new(token.span)
+		n.value = null
+		n.literal_type = TT.TK_NULL_LITERAL
+		return n
 		
 	if _match([TT.TK_IDENTIFIER, TT.TK_GET_ENEMIES, TT.TK_NEAREST, TT.TK_DISTANCE, TT.TK_SHOOT, TT.TK_RELOAD]):
 		var n = AST.IdentifierExpr.new(_previous().span)

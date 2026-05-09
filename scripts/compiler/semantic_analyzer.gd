@@ -30,6 +30,8 @@ func _register_builtins():
 	_define("distance", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
 	_define("shoot", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.VOID))
 	_define("reload", TypeInfo.FunctionType.new([], TypeInfo.VOID))
+	_define("_array_size", TypeInfo.FunctionType.new([TypeInfo.ENEMY_ARRAY], TypeInfo.INT))
+	_define("_array_get", TypeInfo.FunctionType.new([TypeInfo.ENEMY_ARRAY, TypeInfo.INT], TypeInfo.ENEMY))
 
 func _begin_scope():
 	scopes.append({})

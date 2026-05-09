@@ -6,6 +6,7 @@ const STRING = "string"
 const ENEMY = "enemy"
 const ENEMY_ARRAY = "enemy_array"
 const VOID = "void"
+const NULL = "null"
 const ERROR = "error"
 
 class FunctionType extends RefCounted:
@@ -18,4 +19,5 @@ class FunctionType extends RefCounted:
 
 static func is_assignable(target: String, source: String) -> bool:
 	if source == ERROR or target == ERROR: return true
+	if source == NULL or target == NULL: return true
 	return target == source

@@ -1,43 +1,43 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://5t6dsl10tm3a"]
 
 [ext_resource type="PackedScene" path="res://scenes/game_world.tscn" id="1_kw4c5"]
+[ext_resource type="Script" uid="uid://vswgupjqjxtt" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ide_panel.tscn" id="2_djdhe"]
 [ext_resource type="PackedScene" path="res://scenes/ui/compiler_pipeline_panel.tscn" id="3_oe9fd"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
-
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=674814874]
 script = ExtResource("1_main")
 
-[node name="GameWorld" parent="." instance=ExtResource("1_kw4c5")]
+[node name="GameWorld" parent="." unique_id=195690584 instance=ExtResource("1_kw4c5")]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2006173042]
 
-[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer"]
+[node name="HSplitContainer" type="HSplitContainer" parent="CanvasLayer" unique_id=1914494099]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+split_offsets = PackedInt32Array(800)
 split_offset = 800
 
-[node name="LeftSpacer" type="Control" parent="CanvasLayer/HSplitContainer"]
+[node name="LeftSpacer" type="Control" parent="CanvasLayer/HSplitContainer" unique_id=1834783554]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="UIVSplit" type="VSplitContainer" parent="CanvasLayer/HSplitContainer"]
+[node name="UIVSplit" type="VSplitContainer" parent="CanvasLayer/HSplitContainer" unique_id=1914174480]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
-[node name="IDEPanel" parent="CanvasLayer/HSplitContainer/UIVSplit" instance=ExtResource("2_djdhe")]
+[node name="IDEPanel" parent="CanvasLayer/HSplitContainer/UIVSplit" unique_id=1589383451 instance=ExtResource("2_djdhe")]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CompilerPipelinePanel" parent="CanvasLayer/HSplitContainer/UIVSplit" instance=ExtResource("3_oe9fd")]
+[node name="CompilerPipelinePanel" parent="CanvasLayer/HSplitContainer/UIVSplit" unique_id=1869284984 instance=ExtResource("3_oe9fd")]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 
-[node name="IntroOverlay" type="AcceptDialog" parent="CanvasLayer"]
+[node name="IntroOverlay" type="AcceptDialog" parent="CanvasLayer" unique_id=1809415425]
 title = "Welcome to TurretScript!"
 initial_position = 2
 size = Vector2i(550, 250)
