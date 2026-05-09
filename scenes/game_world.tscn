@@ -1,28 +1,33 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://c5elujhwc0usf"]
 
-[ext_resource type="Script" path="res://scripts/game_world.gd" id="1_gw"]
-[ext_resource type="PackedScene" path="res://scenes/entities/turret.tscn" id="2_turr"]
+[ext_resource type="Script" uid="uid://bsvq8jp6x4bpm" path="res://scripts/game_world.gd" id="1_gw"]
+[ext_resource type="PackedScene" uid="uid://bcng8rf8g5v5x" path="res://scenes/entities/turret.tscn" id="2_turr"]
+[ext_resource type="PackedScene" uid="uid://dduo8ml7lm0et" path="res://scenes/entities/tower.tscn" id="3_ywgp6"]
 
 [sub_resource type="Curve2D" id="Curve2D_gw"]
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, -100, 100, 0, 0, 0, 0, 200, 100, 0, 0, 0, 0, 200, 400, 0, 0, 0, 0, 600, 400)
+"points": PackedVector2Array(0, 0, 0, 0, -100, 100, 0, 0, 0, 0, 200, 100, 0, 0, 0, 0, 200, 400, 0, 0, 0, 0, 597, 402)
 }
 point_count = 4
 
-[node name="GameWorld" type="Node2D"]
+[node name="GameWorld" type="Node2D" unique_id=1523627217]
 script = ExtResource("1_gw")
 
-[node name="Map" type="Node2D" parent="."]
+[node name="Map" type="Node2D" parent="." unique_id=1253155528]
 
-[node name="TurretPosition" type="Marker2D" parent="."]
+[node name="TurretPosition" type="Marker2D" parent="." unique_id=1219568089]
 position = Vector2(300, 360)
 
-[node name="Turret" parent="TurretPosition" instance=ExtResource("2_turr")]
+[node name="Turret" parent="TurretPosition" unique_id=2145035409 instance=ExtResource("2_turr")]
 
-[node name="EnemyPath" type="Path2D" parent="."]
+[node name="EnemyPath" type="Path2D" parent="." unique_id=2023138003]
 curve = SubResource("Curve2D_gw")
 
-[node name="DebugLabel" type="Label" parent="."]
+[node name="DebugLabel" type="Label" parent="." unique_id=1619238812]
 offset_right = 40.0
 offset_bottom = 23.0
 text = "Game World Loaded"
+
+[node name="Tower" parent="." unique_id=1990357893 instance=ExtResource("3_ywgp6")]
+position = Vector2(595, 403)
+scale = Vector2(0.08, 0.08)
