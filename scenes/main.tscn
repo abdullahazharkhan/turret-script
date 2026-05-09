@@ -4,11 +4,20 @@
 [ext_resource type="Script" uid="uid://vswgupjqjxtt" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ide_panel.tscn" id="2_djdhe"]
 [ext_resource type="PackedScene" path="res://scenes/ui/compiler_pipeline_panel.tscn" id="3_oe9fd"]
+[ext_resource type="Texture2D" uid="uid://d36v3jyq8yous" path="res://assets/tiles/grass.png" id="5_tbgi4"]
 
 [node name="Main" type="Node" unique_id=674814874]
 script = ExtResource("1_main")
 
 [node name="GameWorld" parent="." unique_id=195690584 instance=ExtResource("1_kw4c5")]
+
+[node name="Grass" type="Sprite2D" parent="GameWorld" unique_id=1308927586]
+z_index = -10
+z_as_relative = false
+position = Vector2(244, 334)
+scale = Vector2(12, 12)
+texture = ExtResource("5_tbgi4")
+offset = Vector2(2, 1)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2006173042]
 
@@ -22,6 +31,7 @@ split_offsets = PackedInt32Array(800)
 split_offset = 800
 
 [node name="LeftSpacer" type="Control" parent="CanvasLayer/HSplitContainer" unique_id=1834783554]
+custom_minimum_size = Vector2(950, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -30,6 +40,7 @@ custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 
 [node name="IDEPanel" parent="CanvasLayer/HSplitContainer/UIVSplit" unique_id=1589383451 instance=ExtResource("2_djdhe")]
+custom_minimum_size = Vector2(1, 0)
 layout_mode = 2
 size_flags_vertical = 3
 

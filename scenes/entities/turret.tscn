@@ -1,14 +1,16 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://bcng8rf8g5v5x"]
 
-[ext_resource type="Script" path="res://scripts/entities/turret.gd" id="1_turr"]
-[ext_resource type="Texture2D" path="res://assets/sprites/turrets/turret_base.png" id="2_tbase"]
-[ext_resource type="Texture2D" path="res://assets/sprites/turrets/turret_barrel.png" id="3_tbarr"]
+[ext_resource type="Script" uid="uid://dc5us6jv1wm5c" path="res://scripts/entities/turret.gd" id="1_turr"]
+[ext_resource type="Texture2D" uid="uid://balsx05mkku6n" path="res://assets/sprites/turrets/turret_base.png" id="2_tbase"]
+[ext_resource type="Texture2D" uid="uid://coek7nqno3e28" path="res://assets/sprites/turrets/turret_barrel.png" id="3_tbarr"]
 
-[node name="Turret" type="Node2D"]
+[node name="Turret" type="Node2D" unique_id=30313578]
 script = ExtResource("1_turr")
 
-[node name="TurretBase" type="Sprite2D" parent="."]
+[node name="TurretBase" type="Sprite2D" parent="." unique_id=104832708]
+z_index = 5
+z_as_relative = false
 texture = ExtResource("2_tbase")
 
-[node name="TurretBarrel" type="Sprite2D" parent="."]
+[node name="TurretBarrel" type="Sprite2D" parent="." unique_id=337557080]
 texture = ExtResource("3_tbarr")
