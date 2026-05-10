@@ -182,6 +182,13 @@ func _execute_instruction(inst):
 				"distance": context.push(api.distance(args[0]))
 				"shoot": api.shoot(args[0])
 				"reload": api.reload()
+				"run": api.run(args[0], args[1], args[2])
+				"enemy_x": context.push(api.enemy_x(args[0]))
+				"enemy_y": context.push(api.enemy_y(args[0]))
+				"enemy_dir_x": context.push(api.enemy_dir_x(args[0]))
+				"enemy_dir_y": context.push(api.enemy_dir_y(args[0]))
+				"turret_x": context.push(api.turret_x())
+				"turret_y": context.push(api.turret_y())
 				"_array_size": context.push(args[0].size() if typeof(args[0]) == TYPE_ARRAY else 0)
 				"_array_get": 
 					var arr = args[0]

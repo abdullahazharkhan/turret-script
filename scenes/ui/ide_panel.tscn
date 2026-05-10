@@ -60,6 +60,7 @@ text = "Help"
 layout_mode = 2
 size_flags_vertical = 3
 text = "func main() {
+	run(1, 0, 40);
 	var enemies = get_enemies();
 	var target = nearest(enemies);
 	if (distance(target) < 200) {
@@ -108,6 +109,13 @@ text = "[b]Types:[/b] int, bool, string, enemy, void
 - [color=#d2a8ff]distance(enemy)[/color] -> int
 - [color=#d2a8ff]shoot(enemy)[/color] -> void
 - [color=#d2a8ff]reload()[/color] -> void
+- [color=#d2a8ff]run(dx, dy, speed)[/color] -> void
+- [color=#d2a8ff]enemy_x(enemy)[/color] -> int
+- [color=#d2a8ff]enemy_y(enemy)[/color] -> int
+- [color=#d2a8ff]enemy_dir_x(enemy)[/color] -> int (scaled by 100)
+- [color=#d2a8ff]enemy_dir_y(enemy)[/color] -> int (scaled by 100)
+- [color=#d2a8ff]turret_x()[/color] -> int
+- [color=#d2a8ff]turret_y()[/color] -> int
 
 [b]Enemy Properties:[/b]
 - [color=#ffcc00]enemy.id[/color] (int)

@@ -30,6 +30,13 @@ func _register_builtins():
 	_define("distance", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
 	_define("shoot", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.VOID))
 	_define("reload", TypeInfo.FunctionType.new([], TypeInfo.VOID))
+	_define("run", TypeInfo.FunctionType.new([TypeInfo.INT, TypeInfo.INT, TypeInfo.INT], TypeInfo.VOID))
+	_define("enemy_x", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
+	_define("enemy_y", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
+	_define("enemy_dir_x", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
+	_define("enemy_dir_y", TypeInfo.FunctionType.new([TypeInfo.ENEMY], TypeInfo.INT))
+	_define("turret_x", TypeInfo.FunctionType.new([], TypeInfo.INT))
+	_define("turret_y", TypeInfo.FunctionType.new([], TypeInfo.INT))
 	_define("_array_size", TypeInfo.FunctionType.new([TypeInfo.ENEMY_ARRAY], TypeInfo.INT))
 	_define("_array_get", TypeInfo.FunctionType.new([TypeInfo.ENEMY_ARRAY, TypeInfo.INT], TypeInfo.ENEMY))
 

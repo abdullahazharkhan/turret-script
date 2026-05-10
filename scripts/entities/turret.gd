@@ -3,15 +3,28 @@ class_name Turret
 
 var ammo: int = 10
 var max_ammo: int = 10
-var cooldown: float = 1.0
+var cooldown: float = 0.2
 var time_since_last_shot: float = 0.0
 var ammo_type: String = "basic"
+@export var run_direction: Vector2 = Vector2.ZERO
+@export var run_speed: float = 0.0
+var is_simulating: bool = false
 
 @onready var barrel = $TurretBarrel
 var projectile_scene = preload("res://scenes/entities/projectile.tscn")
 
 func _process(delta):
 	time_since_last_shot += delta
+	_apply_run(delta)
+
+func _apply_run(delta: float) -> void:
+	if not is_simulating:
+		return
+	if run_speed <= 0.0:
+		return
+	if run_direction == Vector2.ZERO:
+		return
+	position += run_direction.normalized() * run_speed * delta
 
 func set_target(target: Node2D):
 	if is_instance_valid(target):

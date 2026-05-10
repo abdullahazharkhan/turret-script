@@ -24,11 +24,13 @@ const DiagScript = preload("res://scripts/compiler/data/diagnostic.gd")
 const SAVE_PATH = "user://turret_script_save.txt"
 
 var EXAMPLES = [
-	{ "name": "1. Nearest Enemy (Default)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\tif (distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
+	{ "name": "1. Nearest Enemy (Default)", "code": "func main() {\n\trun(1, 0, 40);\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\tif (distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
 	{ "name": "2. Low-Health Priority", "code": "func main() {\n\tvar enemies = get_enemies();\n\tif (_array_size(enemies) == 0) { return; }\n\n\tvar best = _array_get(enemies, 0);\n\tfor enemy e in get_enemies() {\n\t\tif (e.health < best.health) {\n\t\t\tbest = e;\n\t\t}\n\t}\n\n\tif (distance(best) < 200) {\n\t\tshoot(best);\n\t}\n}" },
-	{ "name": "3. Armor-Piercing (Tank Focus)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tfor enemy e in enemies {\n\t\tif (e.type == \"tank\" and distance(e) < 200) {\n\t\t\tshoot(e);\n\t\t\treturn;\n\t\t}\n\t}\n\n\t// Fallback to nearest\n\tvar target = nearest(enemies);\n\tif (target != null && distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
+	{ "name": "3. Armor-Piercing (Tank Focus)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tfor enemy e in enemies {\n\t\tif (e.type == \"tank\" && distance(e) < 200) {\n\t\t\tshoot(e);\n\t\t\treturn;\n\t\t}\n\t}\n\n\t// Fallback to nearest\n\tvar target = nearest(enemies);\n\tif (target != null && distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}" },
 	{ "name": "4. Reload Management", "code": "// Assumes ammo tracking via properties if added, or just periodic reload\nfunc main() {\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\t\n\tif (distance(target) > 250) {\n\t\treload(); // Reload while waiting\n\t} else {\n\t\tshoot(target);\n\t}\n}" },
-	{ "name": "5. Type Error (Intentionally Invalid)", "code": "func main() {\n\tint threshold = \"not a number\"; // Type mismatch error!\n\tvar enemies = get_enemies();\n\t\n\tif (distance(enemies) < threshold) { // 'distance' expects single enemy\n\t\tshoot(enemies);\n\t}\n}" }
+	{ "name": "5. Keep Distance (Kite)", "code": "func main() {\n\tvar enemies = get_enemies();\n\tif (_array_size(enemies) == 0) {\n\t\trun(0, 0, 0);\n\t\treturn;\n\t}\n\n\tvar target = nearest(enemies);\n\tvar d = distance(target);\n\n\t// Move along the X axis to keep distance.\n\tif (d < 120) {\n\t\trun(-1, 0, 60);\n\t} else if (d > 220) {\n\t\trun(1, 0, 60);\n\t} else {\n\t\trun(0, 0, 0);\n\t\tshoot(target);\n\t}\n}" },
+	{ "name": "6. Smart Chase + Evade", "code": "func main() {\n\tvar enemies = get_enemies();\n\tif (_array_size(enemies) == 0) {\n\t\trun(0, 0, 0);\n\t\treturn;\n\t}\n\n\tvar target = nearest(enemies);\n\tvar d = distance(target);\n\n\tint sx = 0;\n\tint sy = 0;\n\tif (enemy_x(target) > turret_x()) { sx = 1; }\n\telse if (enemy_x(target) < turret_x()) { sx = -1; }\n\tif (enemy_y(target) > turret_y()) { sy = 1; }\n\telse if (enemy_y(target) < turret_y()) { sy = -1; }\n\n\tif (d > 40) {\n\t\trun(sx, sy, 70);\n\t\treturn;\n\t}\n\n\tif (d < 20) {\n\t\tvar dx = enemy_dir_x(target);\n\t\tvar dy = enemy_dir_y(target);\n\t\tif (dx == 0 && dy == 0) {\n\t\t\trun(-sx, -sy, 70);\n\t\t} else {\n\t\t\trun(-dx, -dy, 70);\n\t\t}\n\t\treturn;\n\t}\n\n\trun(0, 0, 0);\n\tshoot(target);\n}" },
+	{ "name": "7. Type Error (Intentionally Invalid)", "code": "func main() {\n\tint threshold = \"not a number\"; // Type mismatch error!\n\tvar enemies = get_enemies();\n\t\n\tif (distance(enemies) < threshold) { // 'distance' expects single enemy\n\t\tshoot(enemies);\n\t}\n}" }
 ]
 
 func _ready():
@@ -68,7 +70,7 @@ func _setup_syntax_highlighting():
 	for type in ["int", "bool", "string", "enemy", "void"]:
 		highlighter.add_keyword_color(type, type_color)
 
-	for api in ["get_enemies", "nearest", "distance", "shoot", "reload"]:
+	for api in ["get_enemies", "nearest", "distance", "shoot", "reload", "run", "enemy_x", "enemy_y", "enemy_dir_x", "enemy_dir_y", "turret_x", "turret_y"]:
 		highlighter.add_keyword_color(api, api_color)
 
 	editor.syntax_highlighter = highlighter
@@ -122,4 +124,3 @@ func show_diagnostics(diagnostics_list: Array):
 		for d in diagnostics_list:
 			var color = "red" if d.level == DiagScript.LVL_ERROR else "orange"
 			diagnostics.text += "[color=%s]%s[/color]\n" % [color, d.as_string()]
-

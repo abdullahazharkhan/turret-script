@@ -9,6 +9,8 @@ var armor: int = 0
 var alive: bool = true
 var path_follow: PathFollow2D
 var reached_tower: bool = false
+var move_dir: Vector2 = Vector2.ZERO
+var _last_global_pos: Vector2 = Vector2.ZERO
 
 const HEALTH_BAR_WIDTH: float = 34.0
 const HEALTH_BAR_HEIGHT: float = 5.0
@@ -16,17 +18,28 @@ const HEALTH_BAR_OFFSET: Vector2 = Vector2(-17.0, -28.0)
 
 func _ready():
 	max_health = max(1, health)
+	_last_global_pos = global_position
 	queue_redraw()
 
 func _physics_process(delta):
 	if not alive:
+		move_dir = Vector2.ZERO
 		return
+
+	var prev_pos = global_position
 
 	if path_follow:
 		path_follow.progress += speed * delta
 
 		if path_follow.progress_ratio >= 1.0:
 			reach_tower()
+
+	var delta_pos = global_position - prev_pos
+	if delta_pos.length() > 0.001:
+		move_dir = delta_pos.normalized()
+	else:
+		move_dir = Vector2.ZERO
+	_last_global_pos = global_position
 
 func _draw():
 	var ratio = clamp(float(health) / float(max_health), 0.0, 1.0)

@@ -3,7 +3,7 @@ extends Node2D
 class_name GameWorld
 
 @onready var enemy_path = $EnemyPath
-@onready var turret = $TurretPosition/Turret
+@onready var turret_position = $TurretPosition
 @onready var debug_label = $DebugLabel
 @onready var tower_sprite = $Tower
 
@@ -14,10 +14,17 @@ signal vm_error(msg: String)
 
 const TurretScriptVM = preload("res://scripts/runtime/turretscript_vm.gd")
 const APIAdapter = preload("res://scripts/runtime/turret_api_adapter.gd")
+const TURRET_SCENE = preload("res://scenes/entities/turret.tscn")
+const TOWER_SCENE = preload("res://scenes/entities/tower.tscn")
+const DIR_SCALE = 100.0
 
 var enemy_scene = preload("res://scenes/entities/enemy.tscn")
 var enemy_id_counter: int = 0
 var time_since_spawn: float = 0.0
+var elapsed_time: float = 0.0
+const BASE_SPAWN_INTERVAL = 2.0
+const MIN_SPAWN_INTERVAL = 0.6
+const SPAWN_INTERVAL_DECAY = 0.02
 
 var debug_stepping_enabled: bool = false
 var is_simulating: bool = false
@@ -29,6 +36,53 @@ const AI_TICK_RATE = 0.2
 
 var last_targeted_enemy: Node2D = null
 var reached_enemy_count: int = 0
+var turret: Node2D = null
+var _initial_turret_local_pos: Vector2 = Vector2.ZERO
+var _initial_tower_pos: Vector2 = Vector2.ZERO
+var _initial_tower_scale: Vector2 = Vector2.ONE
+
+func _ready():
+	_capture_initial_state()
+	_ensure_tower()
+	_ensure_turret()
+
+func _capture_initial_state() -> void:
+	if is_instance_valid(turret_position):
+		var existing = turret_position.get_node_or_null("Turret")
+		if is_instance_valid(existing):
+			turret = existing
+			_initial_turret_local_pos = existing.position
+		else:
+			_initial_turret_local_pos = Vector2.ZERO
+	if is_instance_valid(tower_sprite):
+		_initial_tower_pos = tower_sprite.position
+		_initial_tower_scale = tower_sprite.scale
+
+func _ensure_turret() -> void:
+	if is_instance_valid(turret):
+		return
+	if not is_instance_valid(turret_position):
+		return
+	var existing = turret_position.get_node_or_null("Turret")
+	if is_instance_valid(existing):
+		turret = existing
+	else:
+		var new_turret = TURRET_SCENE.instantiate()
+		turret_position.add_child(new_turret)
+		turret = new_turret
+	if is_instance_valid(turret):
+		turret.position = _initial_turret_local_pos
+		turret.is_simulating = is_simulating
+
+func _ensure_tower() -> void:
+	if is_instance_valid(tower_sprite):
+		tower_sprite.visible = true
+		return
+	var new_tower = TOWER_SCENE.instantiate()
+	add_child(new_tower)
+	tower_sprite = new_tower
+	tower_sprite.position = _initial_tower_pos
+	tower_sprite.scale = _initial_tower_scale
 
 func load_program(ir):
 	active_ir_program = ir
@@ -44,18 +98,30 @@ func _reset_vm():
 
 func toggle_simulation():
 	is_simulating = not is_simulating
+	if is_instance_valid(turret):
+		turret.is_simulating = is_simulating
 
 func reset_wave():
 	is_simulating = false
 	time_since_spawn = 0.0
+	elapsed_time = 0.0
 	ai_tick_timer = 0.0
 	for c in enemy_path.get_children():
 		c.queue_free()
 	enemy_id_counter = 0
 	reached_enemy_count = 0
+	_ensure_tower()
+	_ensure_turret()
 	if is_instance_valid(turret):
 		turret.ammo = turret.max_ammo
 		turret.time_since_last_shot = turret.cooldown
+		turret.is_simulating = false
+		turret.position = _initial_turret_local_pos
+		turret.run_direction = Vector2.ZERO
+		turret.run_speed = 0.0
+	if is_instance_valid(tower_sprite):
+		tower_sprite.position = _initial_tower_pos
+		tower_sprite.scale = _initial_tower_scale
 	last_targeted_enemy = null
 	_reset_vm()
 	queue_redraw()
@@ -65,9 +131,11 @@ func _process(delta):
 	
 	if debug_stepping_enabled or not is_simulating:
 		return
-		
+	
+	elapsed_time += delta
 	time_since_spawn += delta
-	if time_since_spawn >= 2.0:
+	var spawn_interval = max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL - (elapsed_time * SPAWN_INTERVAL_DECAY))
+	if time_since_spawn >= spawn_interval:
 		time_since_spawn = 0.0
 		_spawn_enemy()
 		
@@ -91,6 +159,8 @@ func _update_hud():
 	if is_instance_valid(turret):
 		text += "Ammo: %d / %d\n" % [turret.ammo, turret.max_ammo]
 		text += "Cooldown: %.1fs\n" % max(0.0, turret.cooldown - turret.time_since_last_shot)
+		var spawn_interval = max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL - (elapsed_time * SPAWN_INTERVAL_DECAY))
+		text += "Enemy Spawn: %.2fs\n" % spawn_interval
 	else:
 		text += "Tower: DESTROYED - GAME OVER\n"
 	text += "Reached Enemies: %d\n" % reached_enemy_count
@@ -102,8 +172,10 @@ func _update_hud():
 	debug_label.text = text
 
 func debug_step(delta: float):
+	elapsed_time += delta
 	time_since_spawn += delta
-	if time_since_spawn >= 2.0:
+	var spawn_interval = max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL - (elapsed_time * SPAWN_INTERVAL_DECAY))
+	if time_since_spawn >= spawn_interval:
 		time_since_spawn = 0.0
 		_spawn_enemy()
 
@@ -158,6 +230,55 @@ func api_reload():
 	if is_instance_valid(turret):
 		turret.api_reload()
 
+func _round_int(value: float) -> int:
+	return int(round(value))
+
+func api_enemy_x(enemy) -> int:
+	if is_instance_valid(enemy):
+		return _round_int(enemy.global_position.x)
+	return 0
+
+func api_enemy_y(enemy) -> int:
+	if is_instance_valid(enemy):
+		return _round_int(enemy.global_position.y)
+	return 0
+
+func api_enemy_dir_x(enemy) -> int:
+	if is_instance_valid(enemy) and enemy.has_method("get"):
+		var dir_val = enemy.get("move_dir")
+		if typeof(dir_val) == TYPE_VECTOR2:
+			return _round_int(dir_val.x * DIR_SCALE)
+	return 0
+
+func api_enemy_dir_y(enemy) -> int:
+	if is_instance_valid(enemy) and enemy.has_method("get"):
+		var dir_val = enemy.get("move_dir")
+		if typeof(dir_val) == TYPE_VECTOR2:
+			return _round_int(dir_val.y * DIR_SCALE)
+	return 0
+
+func api_turret_x() -> int:
+	if is_instance_valid(turret):
+		return _round_int(turret.global_position.x)
+	return 0
+
+func api_turret_y() -> int:
+	if is_instance_valid(turret):
+		return _round_int(turret.global_position.y)
+	return 0
+
+func _to_float(value) -> float:
+	if typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT:
+		return float(value)
+	return 0.0
+
+func api_run(dx, dy, speed):
+	if not is_instance_valid(turret):
+		return
+	var dir = Vector2(_to_float(dx), _to_float(dy))
+	turret.run_direction = dir
+	turret.run_speed = max(0.0, _to_float(speed))
+
 func on_enemy_reached_tower():
 	reached_enemy_count += 1
 	if reached_enemy_count >= 10:
@@ -166,9 +287,11 @@ func on_enemy_reached_tower():
 		if is_instance_valid(tower_sprite):
 			tower_sprite.visible = false
 			tower_sprite.queue_free()
+			tower_sprite = null
 		# Keep turret node removal as-is (it controls VM targeting).
 		if is_instance_valid(turret):
 			turret.queue_free()
+			turret = null
 		is_simulating = false
 		print("Tower destroyed! Game Over.")
 

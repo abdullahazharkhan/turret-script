@@ -67,7 +67,7 @@ func _init():
     
     var editor = TextEdit.new()
     editor.name = "CodeEditor"
-    editor.text = "func main() {\n\t// Write code here\n}"
+    editor.text = "func main() {\n\trun(1, 0, 40);\n\tvar enemies = get_enemies();\n\tvar target = nearest(enemies);\n\tif (distance(target) < 200) {\n\t\tshoot(target);\n\t}\n}"
     editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
     vbox.add_child(editor)
     editor.owner = ide_panel

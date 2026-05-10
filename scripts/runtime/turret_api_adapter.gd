@@ -40,6 +40,41 @@ func reload():
 	if game_world and game_world.has_method("api_reload"):
 		game_world.api_reload()
 
+func run(dx, dy, speed):
+	emit_signal("log_message", "[API] -> RUN dir=(%s,%s) speed=%s" % [str(dx), str(dy), str(speed)])
+	if game_world and game_world.has_method("api_run"):
+		game_world.api_run(dx, dy, speed)
+
+func enemy_x(enemy) -> int:
+	if game_world and game_world.has_method("api_enemy_x"):
+		return game_world.api_enemy_x(enemy)
+	return 0
+
+func enemy_y(enemy) -> int:
+	if game_world and game_world.has_method("api_enemy_y"):
+		return game_world.api_enemy_y(enemy)
+	return 0
+
+func enemy_dir_x(enemy) -> int:
+	if game_world and game_world.has_method("api_enemy_dir_x"):
+		return game_world.api_enemy_dir_x(enemy)
+	return 0
+
+func enemy_dir_y(enemy) -> int:
+	if game_world and game_world.has_method("api_enemy_dir_y"):
+		return game_world.api_enemy_dir_y(enemy)
+	return 0
+
+func turret_x() -> int:
+	if game_world and game_world.has_method("api_turret_x"):
+		return game_world.api_turret_x()
+	return 0
+
+func turret_y() -> int:
+	if game_world and game_world.has_method("api_turret_y"):
+		return game_world.api_turret_y()
+	return 0
+
 func _get_distance(enemy) -> int:
 	if typeof(enemy) == TYPE_DICTIONARY and enemy.has("distance"):
 		return enemy["distance"]
