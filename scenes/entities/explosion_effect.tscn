@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://explosion_effect"]
+
+[ext_resource type="Script" path="res://scripts/entities/explosion_effect.gd" id="1_fx"]
+[ext_resource type="Texture2D" path="res://assets/sprites/effects/explosion_sheet_6x1.png" id="2_tex"]
+
+[node name="ExplosionEffect" type="Sprite2D" groups="" unique_id="uid://explosion_effect_node"]
+script = ExtResource("1_fx")
+texture = ExtResource("2_tex")
+centered = true
+z_index = 100
+region_enabled = true
+region_rect = Rect2(0, 0, 1, 1)
+

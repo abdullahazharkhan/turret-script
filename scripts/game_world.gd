@@ -1,9 +1,13 @@
 extends Node2D
+
 class_name GameWorld
 
 @onready var enemy_path = $EnemyPath
 @onready var turret = $TurretPosition/Turret
 @onready var debug_label = $DebugLabel
+@onready var tower_sprite = $Tower
+
+
 
 signal vm_log(msg: String)
 signal vm_error(msg: String)
@@ -157,10 +161,37 @@ func api_reload():
 func on_enemy_reached_tower():
 	reached_enemy_count += 1
 	if reached_enemy_count >= 10:
+		# Visual blast at tower, then remove tower sprite (not the turret node).
+		_spawn_tower_blast()
+		if is_instance_valid(tower_sprite):
+			tower_sprite.visible = false
+			tower_sprite.queue_free()
+		# Keep turret node removal as-is (it controls VM targeting).
 		if is_instance_valid(turret):
 			turret.queue_free()
-			is_simulating = false
-			print("Tower destroyed! Game Over.")
+		is_simulating = false
+		print("Tower destroyed! Game Over.")
+
+
+func _spawn_tower_blast() -> void:
+	# Spawn the explosion at the visual tower sprite position.
+	# Note: this can be triggered right as nodes are being freed, so we must
+	# read positions before freeing.
+	var explosion_scene := preload("res://scenes/entities/explosion_effect.tscn")
+	var fx := explosion_scene.instantiate()
+
+	var pos := Vector2.ZERO
+	if is_instance_valid(tower_sprite):
+		pos = tower_sprite.global_position
+	elif is_instance_valid(turret):
+		pos = turret.global_position
+
+	fx.global_position = pos
+	get_tree().current_scene.add_child(fx)
+
+
+
+
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -175,4 +206,6 @@ func _input(event):
 			if n:
 				api_shoot(n)
 		elif event.keycode == KEY_R:
+
+
 			api_reload()
