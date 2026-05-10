@@ -14,6 +14,7 @@ script = ExtResource("1_main")
 [node name="Grass" type="Sprite2D" parent="GameWorld" unique_id=1308927586]
 z_index = -10
 z_as_relative = false
+texture_filter = 1
 position = Vector2(244, 334)
 scale = Vector2(12, 12)
 texture = ExtResource("5_tbgi4")

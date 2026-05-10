@@ -1,4 +1,5 @@
 extends RefCounted
+class_name TurretScriptVM
 
 const IRProgram = preload("res://scripts/compiler/ir/ir_program.gd")
 const IRInstruction = preload("res://scripts/compiler/ir/ir_instruction.gd")
@@ -81,6 +82,8 @@ func _execute_instruction(inst):
 		IRInstruction.OpCode.LOAD_VAR:
 			var val = context.get_local(arg)
 			context.push(val)
+		IRInstruction.OpCode.POP:
+			context.pop()
 		IRInstruction.OpCode.ADD:
 			var b = context.pop(); var a = context.pop()
 			context.push(a + b)
@@ -131,6 +134,14 @@ func _execute_instruction(inst):
 		IRInstruction.OpCode.JMP_IF_FALSE:
 			var cond = context.pop()
 			if not cond:
+				context.ip = arg
+		IRInstruction.OpCode.JMP_IF_FALSE_NO_POP:
+			var cond = context.peek()
+			if not cond:
+				context.ip = arg
+		IRInstruction.OpCode.JMP_IF_TRUE_NO_POP:
+			var cond = context.peek()
+			if cond:
 				context.ip = arg
 		IRInstruction.OpCode.CALL:
 			var func_name = arg[0]

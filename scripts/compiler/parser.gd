@@ -155,20 +155,21 @@ func _for_enemy_statement() -> AST.ForEnemyStmt:
 	_consume(TT.TK_TYPE_ENEMY, "Expect 'enemy' after 'for'.")
 	var name = _consume(TT.TK_IDENTIFIER, "Expect loop variable name.")
 	_consume(TT.TK_IN, "Expect 'in' after loop variable.")
-	_consume(TT.TK_GET_ENEMIES, "Expect 'get_enemies' after 'in'.")
-	_consume(TT.TK_LPAREN, "Expect '(' after 'get_enemies'.")
-	_consume(TT.TK_RPAREN, "Expect ')' after '('.")
-	
+
+	var collection = _expression()
+
 	var body = _statement()
 	if body is not AST.Block:
 		var wrapper = AST.Block.new(body.span if body else token.span)
 		if body: wrapper.statements.append(body)
 		body = wrapper
-		
+
 	var node = AST.ForEnemyStmt.new(token.span)
-	if name != null: node.identifier = name.lexeme
+	node.identifier = name.lexeme
+	node.collection = collection
 	node.body = body
 	return node
+
 
 func _return_statement() -> AST.ReturnStmt:
 	var token = _previous()

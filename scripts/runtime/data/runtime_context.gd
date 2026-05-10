@@ -1,4 +1,5 @@
 extends RefCounted
+class_name RuntimeContext
 
 enum State {
 	READY,
@@ -50,3 +51,8 @@ func pop():
 	if stack.is_empty():
 		return null
 	return stack.pop_back()
+
+func peek():
+	if stack.is_empty():
+		return null
+	return stack.back()

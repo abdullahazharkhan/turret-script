@@ -23,8 +23,8 @@ var enemy_id_counter: int = 0
 var time_since_spawn: float = 0.0
 var elapsed_time: float = 0.0
 const BASE_SPAWN_INTERVAL = 2.0
-const MIN_SPAWN_INTERVAL = 0.6
-const SPAWN_INTERVAL_DECAY = 0.02
+const MIN_SPAWN_INTERVAL = 0.4  # Decreased from 0.6
+const SPAWN_INTERVAL_DECAY = 0.04 # Increased from 0.02
 
 var debug_stepping_enabled: bool = false
 var is_simulating: bool = false
@@ -180,9 +180,30 @@ func debug_step(delta: float):
 		_spawn_enemy()
 
 func _spawn_enemy():
+	# Create a unique path for this enemy to randomize their route
+	var new_path = Path2D.new()
+	var base_curve = enemy_path.curve
+	var new_curve = Curve2D.new()
+	
+	for i in range(base_curve.point_count):
+		var pos = base_curve.get_point_position(i)
+		# Don't jitter the start and end points too much to keep them within bounds
+		if i == 0:
+			pos += Vector2(0, randf_range(-50, 50))
+		elif i == base_curve.point_count - 1:
+			# End point should stay near the tower
+			pos += Vector2(randf_range(-10, 10), randf_range(-10, 10))
+		else:
+			# Jitter middle points significantly for different routes
+			pos += Vector2(randf_range(-150, 150), randf_range(-150, 150))
+		new_curve.add_point(pos)
+	
+	new_path.curve = new_curve
+	enemy_path.add_child(new_path)
+	
 	var path_follow = PathFollow2D.new()
 	path_follow.loop = false
-	enemy_path.add_child(path_follow)
+	new_path.add_child(path_follow)
 	
 	var enemy = enemy_scene.instantiate()
 	enemy.id = enemy_id_counter
@@ -193,10 +214,17 @@ func _spawn_enemy():
 func api_get_enemies() -> Array:
 	var enemies = []
 
-	for child in enemy_path.get_children():
-		if child is PathFollow2D and child.get_child_count() > 0:
-			var e = child.get_child(0)
-
+	# Search through all paths in the enemy_path container
+	for path_node in enemy_path.get_children():
+		# The path_node might be a Path2D (new structure) or PathFollow2D (old structure)
+		if path_node is Path2D:
+			for follow_node in path_node.get_children():
+				if follow_node is PathFollow2D and follow_node.get_child_count() > 0:
+					var e = follow_node.get_child(0)
+					if e.has_method("take_damage") and e.get("alive") == true:
+						enemies.append(e)
+		elif path_node is PathFollow2D and path_node.get_child_count() > 0:
+			var e = path_node.get_child(0)
 			if e.has_method("take_damage") and e.get("alive") == true:
 				enemies.append(e)
 

@@ -133,6 +133,10 @@ func _visit(node: AST.ASTNode):
 			_visit(node.body)
 			current_loop_depth -= 1
 		"ForEnemyStmt":
+			_visit(node.collection)
+			if node.collection.resolved_type != TypeInfo.ENEMY_ARRAY and node.collection.resolved_type != TypeInfo.ERROR:
+				_report_error("Can only iterate over 'enemy_array'.", node.collection.span)
+			
 			_begin_scope()
 			_define(node.identifier, TypeInfo.ENEMY)
 			current_loop_depth += 1
@@ -177,7 +181,7 @@ func _visit(node: AST.ASTNode):
 						_report_error("Operands must be 'int' for relational operator.", node.span)
 						node.resolved_type = TypeInfo.ERROR
 				TT.TK_EQ, TT.TK_NEQ:
-					if lt == rt:
+					if lt == rt or TypeInfo.is_assignable(lt, rt) or TypeInfo.is_assignable(rt, lt):
 						node.resolved_type = TypeInfo.BOOL
 					else:
 						_report_error("Type mismatch: cannot compare different types ('%s' and '%s')." % [lt, rt], node.span)
@@ -210,6 +214,7 @@ func _visit(node: AST.ASTNode):
 				TT.TK_INT_LITERAL: node.resolved_type = TypeInfo.INT
 				TT.TK_BOOL_LITERAL: node.resolved_type = TypeInfo.BOOL
 				TT.TK_STRING_LITERAL: node.resolved_type = TypeInfo.STRING
+				TT.TK_NULL_LITERAL: node.resolved_type = TypeInfo.NULL
 		"IdentifierExpr":
 			var sym = _resolve(node.identifier)
 			if sym == null:
@@ -258,8 +263,12 @@ func _visit(node: AST.ASTNode):
 					node.resolved_type = TypeInfo.INT
 				elif node.member == "type":
 					node.resolved_type = TypeInfo.STRING
+				elif node.member == "id":
+					node.resolved_type = TypeInfo.INT
+				elif node.member == "alive":
+					node.resolved_type = TypeInfo.BOOL
 				else:
-					_report_error("Property '%s' does not exist on type 'enemy'. Available properties: id, health, type, alive." % node.member, node.span)
+					_report_error("Property '%s' does not exist on type 'enemy'. Available properties: id, health, type, alive, speed." % node.member, node.span)
 					node.resolved_type = TypeInfo.ERROR
 			else:
 				_report_error("Member access is only supported on 'enemy' objects.", node.span)

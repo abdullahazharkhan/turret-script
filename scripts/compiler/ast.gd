@@ -45,6 +45,7 @@ class WhileStmt extends ASTNode:
 
 class ForEnemyStmt extends ASTNode:
 	var identifier: String
+	var collection: ASTNode
 	var body: Block
 	func _init(s = null): type = "ForEnemyStmt"; span = s
 

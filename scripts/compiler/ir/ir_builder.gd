@@ -8,11 +8,13 @@ const IRProgram = preload("res://scripts/compiler/ir/ir_program.gd")
 var program: IRProgram
 var _local_vars: Array = [] # Stack of scopes (String -> int ID)
 var _var_counter: int = 0
+var _jump_stack: Array = [] # Stack for jump patching during build
 
 func build(ast_root: AST.Program) -> IRProgram:
 	program = IRProgram.new()
 	_local_vars.clear()
 	_var_counter = 0
+	_jump_stack.clear()
 	
 	_begin_scope()
 	_visit(ast_root)
@@ -120,14 +122,14 @@ func _visit(node: AST.ASTNode):
 			_patch_jump(jmp_end, program.instructions.size())
 			
 		"ForEnemyStmt":
-			# for enemy e in get_enemies() compiles to:
-			# arr = get_enemies()
+			# for enemy e in collection compiles to:
+			# arr = collection
 			# i = 0
 			# while i < array_size(arr):
 			#     e = array_get(arr, i)
 			#     body()
 			#     i = i + 1
-			_emit(IRInstruction.OpCode.BUILTIN_CALL, ["get_enemies", 0], ln)
+			_visit(node.collection)
 			
 			_begin_scope()
 			var array_var = _declare_var(".array_" + str(_var_counter))
@@ -177,21 +179,34 @@ func _visit(node: AST.ASTNode):
 			_visit(node.expression)
 			
 		"BinaryExpr":
-			_visit(node.left)
-			_visit(node.right)
-			match node.operator:
-				TT.TK_PLUS: _emit(IRInstruction.OpCode.ADD, null, ln)
-				TT.TK_MINUS: _emit(IRInstruction.OpCode.SUB, null, ln)
-				TT.TK_STAR: _emit(IRInstruction.OpCode.MUL, null, ln)
-				TT.TK_SLASH: _emit(IRInstruction.OpCode.DIV, null, ln)
-				TT.TK_EQ: _emit(IRInstruction.OpCode.EQ, null, ln)
-				TT.TK_NEQ: _emit(IRInstruction.OpCode.NEQ, null, ln)
-				TT.TK_LT: _emit(IRInstruction.OpCode.LT, null, ln)
-				TT.TK_LTE: _emit(IRInstruction.OpCode.LTE, null, ln)
-				TT.TK_GT: _emit(IRInstruction.OpCode.GT, null, ln)
-				TT.TK_GTE: _emit(IRInstruction.OpCode.GTE, null, ln)
-				TT.TK_AND: _emit(IRInstruction.OpCode.AND, null, ln)
-				TT.TK_OR: _emit(IRInstruction.OpCode.OR, null, ln)
+			if node.operator == TT.TK_AND:
+				_visit(node.left)
+				var jmp_end = _emit(IRInstruction.OpCode.JMP_IF_FALSE_NO_POP, -1, ln)
+				_jump_stack.push_back(jmp_end)
+				_emit(IRInstruction.OpCode.POP, null, ln) # Pop left if it was true
+				_visit(node.right)
+				_patch_jump(_jump_stack.pop_back(), program.instructions.size())
+			elif node.operator == TT.TK_OR:
+				_visit(node.left)
+				var jmp_end = _emit(IRInstruction.OpCode.JMP_IF_TRUE_NO_POP, -1, ln)
+				_jump_stack.push_back(jmp_end)
+				_emit(IRInstruction.OpCode.POP, null, ln) # Pop left if it was false
+				_visit(node.right)
+				_patch_jump(_jump_stack.pop_back(), program.instructions.size())
+			else:
+				_visit(node.left)
+				_visit(node.right)
+				match node.operator:
+					TT.TK_PLUS: _emit(IRInstruction.OpCode.ADD, null, ln)
+					TT.TK_MINUS: _emit(IRInstruction.OpCode.SUB, null, ln)
+					TT.TK_STAR: _emit(IRInstruction.OpCode.MUL, null, ln)
+					TT.TK_SLASH: _emit(IRInstruction.OpCode.DIV, null, ln)
+					TT.TK_EQ: _emit(IRInstruction.OpCode.EQ, null, ln)
+					TT.TK_NEQ: _emit(IRInstruction.OpCode.NEQ, null, ln)
+					TT.TK_LT: _emit(IRInstruction.OpCode.LT, null, ln)
+					TT.TK_LTE: _emit(IRInstruction.OpCode.LTE, null, ln)
+					TT.TK_GT: _emit(IRInstruction.OpCode.GT, null, ln)
+					TT.TK_GTE: _emit(IRInstruction.OpCode.GTE, null, ln)
 				
 		"UnaryExpr":
 			_visit(node.right)

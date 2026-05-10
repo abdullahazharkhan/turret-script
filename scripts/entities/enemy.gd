@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 var id: int = 0
-var enemy_type: String = "scout"
+var type: String = "scout"
 var max_health: int = 70
 var health: int = 50
 var speed: float = 100.0
@@ -83,6 +83,10 @@ func die():
 	alive = false
 
 	if is_instance_valid(path_follow):
-		path_follow.call_deferred("queue_free")
+		var path_node = path_follow.get_parent()
+		if path_node is Path2D and path_node != get_node("../../../EnemyPath"):
+			path_node.call_deferred("queue_free")
+		else:
+			path_follow.call_deferred("queue_free")
 	else:
 		call_deferred("queue_free")

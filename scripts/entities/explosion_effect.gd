@@ -27,11 +27,11 @@ func _process(delta: float) -> void:
 	if not _started:
 		return
 	_elapsed += delta
-	var frame := int(floor(_elapsed * float(fps)))
+	var frame_idx := int(floor(_elapsed * float(fps)))
 	if loop:
-		frame = frame % frame_count
+		frame_idx = frame_idx % frame_count
 	else:
-		if frame >= frame_count:
+		if frame_idx >= frame_count:
 			queue_free()
 			return
 
@@ -44,9 +44,8 @@ func _process(delta: float) -> void:
 	var w := tex.get_width() / float(frame_count)
 	var h := tex.get_height()
 	region_enabled = true
-	region_rect = Rect2(int(frame * w), 0, int(w), h)
+	region_rect = Rect2(int(frame_idx * w), 0, int(w), h)
 
 	# subtle scale-up for impact
 	# (safe even if you change this later)
-	scale = Vector2.ONE * (1.0 + 0.15 * (1.0 - float(frame) / float(frame_count)))
-
+	scale = Vector2.ONE * (1.0 + 0.15 * (1.0 - float(frame_idx) / float(frame_count)))
